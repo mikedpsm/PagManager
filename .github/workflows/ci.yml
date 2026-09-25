@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint & Format (Biome)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: '2.5.14'
+
+      - name: Run Biome CI checks
+        run: biome ci .
+
+  contracts:
+    name: Contracts (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20.x', '22.x']
+
+    defaults:
+      run:
+        working-directory: packages/contracts
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: packages/contracts/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Run Vitest unit tests
+        run: npm test
+
+      - name: Build contracts package
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          test -f dist/index.js || { echo "Missing dist/index.js"; exit 1; }
+          test -f dist/index.d.ts || { echo "Missing dist/index.d.ts"; exit 1; }
+          echo "Contracts build artifacts verified successfully."
+
+  ci-status:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - contracts
+    if: always()
+    steps:
+      - name: Evaluate status
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then
+            echo "Lint job failed or was cancelled (result: ${{ needs.lint.result }})."
+            exit 1
+          fi
+          if [[ "${{ needs.contracts.result }}" != "success" ]]; then
+            echo "Contracts job failed or was cancelled (result: ${{ needs.contracts.result }})."
+            exit 1
+          fi
+          echo "All CI workflow checks passed successfully!"

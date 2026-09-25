@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  errorResponseSchema,
   authResponseSchema,
   clientListQuerySchema,
   clientSchema,
   dashboardClientSummarySchema,
   dashboardSummarySchema,
   dashboardTotalsSchema,
+  errorResponseSchema,
   invoiceListQuerySchema,
   invoiceSchema,
   loginInputSchema,
@@ -47,35 +47,68 @@ const validInvoice = {
 
 describe('auth schemas', () => {
   it('parses RegisterStep1', () => {
-    expect(registerStep1Schema.safeParse({ username: 'Maicon', email: 'maicon@example.com' }).success).toBe(true);
+    expect(
+      registerStep1Schema.safeParse({
+        username: 'Maicon',
+        email: 'maicon@example.com',
+      }).success,
+    ).toBe(true);
   });
 
   it('rejects RegisterStep1 without email', () => {
-    expect(registerStep1Schema.safeParse({ username: 'Maicon' }).success).toBe(false);
+    expect(registerStep1Schema.safeParse({ username: 'Maicon' }).success).toBe(
+      false,
+    );
   });
 
   it('parses RegisterStep2 with matching passwords', () => {
-    expect(registerStep2Schema.safeParse({ passwd: '12345678', confirmPasswd: '12345678' }).success).toBe(true);
+    expect(
+      registerStep2Schema.safeParse({
+        passwd: '12345678',
+        confirmPasswd: '12345678',
+      }).success,
+    ).toBe(true);
   });
 
   it('rejects RegisterStep2 with mismatched passwords', () => {
-    expect(registerStep2Schema.safeParse({ passwd: '12345678', confirmPasswd: '87654321' }).success).toBe(false);
+    expect(
+      registerStep2Schema.safeParse({
+        passwd: '12345678',
+        confirmPasswd: '87654321',
+      }).success,
+    ).toBe(false);
   });
 
   it('rejects RegisterStep2 with short password', () => {
-    expect(registerStep2Schema.safeParse({ passwd: '123', confirmPasswd: '123' }).success).toBe(false);
+    expect(
+      registerStep2Schema.safeParse({ passwd: '123', confirmPasswd: '123' })
+        .success,
+    ).toBe(false);
   });
 
   it('parses RegisterInput', () => {
-    expect(registerInputSchema.safeParse({ username: 'Maicon', email: 'maicon@example.com', passwd: '12345678' }).success).toBe(true);
+    expect(
+      registerInputSchema.safeParse({
+        username: 'Maicon',
+        email: 'maicon@example.com',
+        passwd: '12345678',
+      }).success,
+    ).toBe(true);
   });
 
   it('parses LoginInput', () => {
-    expect(loginInputSchema.safeParse({ email: 'maicon@example.com', passwd: '12345678' }).success).toBe(true);
+    expect(
+      loginInputSchema.safeParse({
+        email: 'maicon@example.com',
+        passwd: '12345678',
+      }).success,
+    ).toBe(true);
   });
 
   it('parses AuthResponse', () => {
-    expect(authResponseSchema.safeParse({ token: 'abc', user: validUser }).success).toBe(true);
+    expect(
+      authResponseSchema.safeParse({ token: 'abc', user: validUser }).success,
+    ).toBe(true);
   });
 });
 
@@ -85,11 +118,19 @@ describe('user schemas', () => {
   });
 
   it('parses User with cpf and phone', () => {
-    expect(userSchema.safeParse({ ...validUser, cpf: '52998224725', phone: '11999999999' }).success).toBe(true);
+    expect(
+      userSchema.safeParse({
+        ...validUser,
+        cpf: '52998224725',
+        phone: '11999999999',
+      }).success,
+    ).toBe(true);
   });
 
   it('rejects User with invalid cpf', () => {
-    expect(userSchema.safeParse({ ...validUser, cpf: '52998224724' }).success).toBe(false);
+    expect(
+      userSchema.safeParse({ ...validUser, cpf: '52998224724' }).success,
+    ).toBe(false);
   });
 
   it('parses UpdateMeInput with all fields optional', () => {
@@ -97,15 +138,30 @@ describe('user schemas', () => {
   });
 
   it('parses UpdateMeInput with password and matching confirmation', () => {
-    expect(updateMeInputSchema.safeParse({ passwd: '12345678', confirmPasswd: '12345678' }).success).toBe(true);
+    expect(
+      updateMeInputSchema.safeParse({
+        passwd: '12345678',
+        confirmPasswd: '12345678',
+      }).success,
+    ).toBe(true);
   });
 
   it('rejects UpdateMeInput with mismatched confirmation', () => {
-    expect(updateMeInputSchema.safeParse({ passwd: '12345678', confirmPasswd: '87654321' }).success).toBe(false);
+    expect(
+      updateMeInputSchema.safeParse({
+        passwd: '12345678',
+        confirmPasswd: '87654321',
+      }).success,
+    ).toBe(false);
   });
 
   it('parses UpdateMeInput with cpf and phone', () => {
-    expect(updateMeInputSchema.safeParse({ cpf: '52998224725', phone: '11999999999' }).success).toBe(true);
+    expect(
+      updateMeInputSchema.safeParse({
+        cpf: '52998224725',
+        phone: '11999999999',
+      }).success,
+    ).toBe(true);
   });
 });
 
@@ -115,19 +171,28 @@ describe('client schemas', () => {
   });
 
   it('parses Client with overdue status', () => {
-    expect(clientSchema.safeParse({ ...validClient, status: 'overdue' }).success).toBe(true);
+    expect(
+      clientSchema.safeParse({ ...validClient, status: 'overdue' }).success,
+    ).toBe(true);
   });
 
   it('rejects unknown client status', () => {
-    expect(clientSchema.safeParse({ ...validClient, status: 'paid' }).success).toBe(false);
+    expect(
+      clientSchema.safeParse({ ...validClient, status: 'paid' }).success,
+    ).toBe(false);
   });
 
   it('rejects Client with invalid cpf', () => {
-    expect(clientSchema.safeParse({ ...validClient, cpf: '11111111111' }).success).toBe(false);
+    expect(
+      clientSchema.safeParse({ ...validClient, cpf: '11111111111' }).success,
+    ).toBe(false);
   });
 
   it('parses ClientListQuery', () => {
-    expect(clientListQuerySchema.safeParse({ search: 'cris', status: 'overdue' }).success).toBe(true);
+    expect(
+      clientListQuerySchema.safeParse({ search: 'cris', status: 'overdue' })
+        .success,
+    ).toBe(true);
   });
 
   it('parses empty ClientListQuery', () => {
@@ -141,27 +206,44 @@ describe('invoice schemas', () => {
   });
 
   it('parses Invoice with paidAt and paid status', () => {
-    expect(invoiceSchema.safeParse({ ...validInvoice, paidAt: '2024-01-15T10:30:00Z', status: 'paid' }).success).toBe(true);
+    expect(
+      invoiceSchema.safeParse({
+        ...validInvoice,
+        paidAt: '2024-01-15T10:30:00Z',
+        status: 'paid',
+      }).success,
+    ).toBe(true);
   });
 
   it('rejects non-integer amountCents', () => {
-    expect(invoiceSchema.safeParse({ ...validInvoice, amountCents: 900.5 }).success).toBe(false);
+    expect(
+      invoiceSchema.safeParse({ ...validInvoice, amountCents: 900.5 }).success,
+    ).toBe(false);
   });
 
   it('rejects negative amountCents', () => {
-    expect(invoiceSchema.safeParse({ ...validInvoice, amountCents: -1 }).success).toBe(false);
+    expect(
+      invoiceSchema.safeParse({ ...validInvoice, amountCents: -1 }).success,
+    ).toBe(false);
   });
 
   it('rejects non-ISO due date', () => {
-    expect(invoiceSchema.safeParse({ ...validInvoice, dueDate: '15/01/2024' }).success).toBe(false);
+    expect(
+      invoiceSchema.safeParse({ ...validInvoice, dueDate: '15/01/2024' })
+        .success,
+    ).toBe(false);
   });
 
   it('rejects unknown invoice status', () => {
-    expect(invoiceSchema.safeParse({ ...validInvoice, status: 'open' }).success).toBe(false);
+    expect(
+      invoiceSchema.safeParse({ ...validInvoice, status: 'open' }).success,
+    ).toBe(false);
   });
 
   it('parses InvoiceListQuery', () => {
-    expect(invoiceListQuerySchema.safeParse({ status: 'overdue' }).success).toBe(true);
+    expect(
+      invoiceListQuerySchema.safeParse({ status: 'overdue' }).success,
+    ).toBe(true);
   });
 
   it('parses empty InvoiceListQuery', () => {
@@ -171,7 +253,13 @@ describe('invoice schemas', () => {
 
 describe('dashboard schemas', () => {
   it('parses DashboardTotals', () => {
-    expect(dashboardTotalsSchema.safeParse({ paidCents: 100, pendingCents: 200, overdueCents: 300 }).success).toBe(true);
+    expect(
+      dashboardTotalsSchema.safeParse({
+        paidCents: 100,
+        pendingCents: 200,
+        overdueCents: 300,
+      }).success,
+    ).toBe(true);
   });
 
   it('parses DashboardClientSummary', () => {
@@ -197,19 +285,58 @@ describe('dashboard schemas', () => {
   it('parses DashboardSummary', () => {
     const summary = {
       totals: { paidCents: 100, pendingCents: 200, overdueCents: 300 },
-      overdueClients: [{ invoiceId: uuid, username: 'Cris', amountCents: 90000, dueDate: '2024-01-15' }],
-      upToDateClients: [{ invoiceId: uuid, username: 'Ana', amountCents: 5000, dueDate: '2024-02-01' }],
+      overdueClients: [
+        {
+          invoiceId: uuid,
+          username: 'Cris',
+          amountCents: 90000,
+          dueDate: '2024-01-15',
+        },
+      ],
+      upToDateClients: [
+        {
+          invoiceId: uuid,
+          username: 'Ana',
+          amountCents: 5000,
+          dueDate: '2024-02-01',
+        },
+      ],
     };
     expect(dashboardSummarySchema.safeParse(summary).success).toBe(true);
   });
 
   it('rejects more than four clients in a list', () => {
     const five = [
-      { invoiceId: uuid, username: 'Cris', amountCents: 90000, dueDate: '2024-01-15' },
-      { invoiceId: uuid, username: 'Ana', amountCents: 5000, dueDate: '2024-02-01' },
-      { invoiceId: uuid, username: 'Bia', amountCents: 3000, dueDate: '2024-03-01' },
-      { invoiceId: uuid, username: 'Duda', amountCents: 2000, dueDate: '2024-04-01' },
-      { invoiceId: uuid, username: 'Eva', amountCents: 1000, dueDate: '2024-05-01' },
+      {
+        invoiceId: uuid,
+        username: 'Cris',
+        amountCents: 90000,
+        dueDate: '2024-01-15',
+      },
+      {
+        invoiceId: uuid,
+        username: 'Ana',
+        amountCents: 5000,
+        dueDate: '2024-02-01',
+      },
+      {
+        invoiceId: uuid,
+        username: 'Bia',
+        amountCents: 3000,
+        dueDate: '2024-03-01',
+      },
+      {
+        invoiceId: uuid,
+        username: 'Duda',
+        amountCents: 2000,
+        dueDate: '2024-04-01',
+      },
+      {
+        invoiceId: uuid,
+        username: 'Eva',
+        amountCents: 1000,
+        dueDate: '2024-05-01',
+      },
     ];
     const summary = {
       totals: { paidCents: 0, pendingCents: 0, overdueCents: 0 },
@@ -222,7 +349,18 @@ describe('dashboard schemas', () => {
 
 describe('error schema', () => {
   it('accepts arbitrary error codes and optional details', () => {
-    expect(errorResponseSchema.safeParse({ code: 'CPF_INVALID', message: 'CPF inválido' }).success).toBe(true);
-    expect(errorResponseSchema.safeParse({ code: 'CUSTOM_ERROR', message: 'Erro', details: { field: 'cpf' } }).success).toBe(true);
+    expect(
+      errorResponseSchema.safeParse({
+        code: 'CPF_INVALID',
+        message: 'CPF inválido',
+      }).success,
+    ).toBe(true);
+    expect(
+      errorResponseSchema.safeParse({
+        code: 'CUSTOM_ERROR',
+        message: 'Erro',
+        details: { field: 'cpf' },
+      }).success,
+    ).toBe(true);
   });
 });

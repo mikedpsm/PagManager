@@ -1,0 +1,8 @@
+dist/
+**/dist/**
+node_modules/
+**/node_modules/**
+legacy/
+package-lock.json
+**/package-lock.json
+*.png

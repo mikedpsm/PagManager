@@ -15,7 +15,9 @@ export const dashboardClientSummarySchema = z.object({
   dueDate: z.iso.date(),
 });
 
-export type DashboardClientSummary = z.infer<typeof dashboardClientSummarySchema>;
+export type DashboardClientSummary = z.infer<
+  typeof dashboardClientSummarySchema
+>;
 
 export const dashboardSummarySchema = z.object({
   totals: dashboardTotalsSchema,
