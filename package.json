@@ -27,7 +27,10 @@
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js",
     "lint": "npx @biomejs/biome check .",
-    "lint:fix": "npx @biomejs/biome check --write ."
+    "lint:fix": "npx @biomejs/biome check --write .",
+    "db:migrate": "pnpm --filter @pagmanager/db migrate",
+    "db:seed": "pnpm --filter @pagmanager/db seed",
+    "db:generate": "pnpm --filter @pagmanager/db generate"
   },
   "repository": {
     "type": "git",
