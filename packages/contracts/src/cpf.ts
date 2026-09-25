@@ -28,4 +28,6 @@ export function formatCpf(input: string): string {
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
-export const cpfSchema = z.string().refine(isValidCpf, { error: 'CPF inválido' });
+export const cpfSchema = z
+  .string()
+  .refine(isValidCpf, { error: 'CPF inválido' });

@@ -21,9 +21,12 @@ export const updateMeInputSchema = z
     cpf: cpfSchema.optional(),
     phone: z.string().optional(),
   })
-  .refine((data) => data.passwd === undefined || data.passwd === data.confirmPasswd, {
-    message: 'As senhas não coincidem',
-    path: ['confirmPasswd'],
-  });
+  .refine(
+    (data) => data.passwd === undefined || data.passwd === data.confirmPasswd,
+    {
+      message: 'As senhas não coincidem',
+      path: ['confirmPasswd'],
+    },
+  );
 
 export type UpdateMeInput = z.infer<typeof updateMeInputSchema>;
