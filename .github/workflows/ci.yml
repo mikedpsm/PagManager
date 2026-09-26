@@ -125,10 +125,46 @@ jobs:
       - name: Run db tests (in-memory PGlite + real Postgres)
         run: pnpm --filter @pagmanager/db test
 
-      - name: Smoke test app startup (migrations before listen)
+  api:
+    name: API (build + typecheck + test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts package
+        run: pnpm --filter @pagmanager/contracts build
+
+      - name: Build db package
+        run: pnpm --filter @pagmanager/db build
+
+      - name: Build api package
+        run: pnpm --filter @pagmanager/api build
+
+      - name: Typecheck api package
+        run: pnpm --filter @pagmanager/api typecheck
+
+      - name: Run api tests
+        run: pnpm --filter @pagmanager/api test
+
+      - name: Smoke test app startup (migrations before listen, --healthcheck flag)
         run: |
           set -eu
-          work_dir="$RUNNER_TEMP/pagmanager-smoke"
+          work_dir="$RUNNER_TEMP/pagmanager-api-smoke"
           mkdir -p "$work_dir"
           log_file="$work_dir/app.log"
           data_dir="$work_dir/pglite-data"
@@ -145,7 +181,7 @@ jobs:
           status=1
           i=0
           while [ "$i" -lt 60 ]; do
-            if curl -fsS -o /dev/null http://127.0.0.1:5001/docs/; then
+            if PORT=5001 node apps/api/dist/server.mjs --healthcheck; then
               status=0
               break
             fi
@@ -170,6 +206,7 @@ jobs:
       - lint
       - contracts
       - db
+      - api
     if: always()
     steps:
       - name: Evaluate status
@@ -184,6 +221,10 @@ jobs:
           fi
           if [[ "${{ needs.db.result }}" != "success" ]]; then
             echo "Database job failed or was cancelled (result: ${{ needs.db.result }})."
+            exit 1
+          fi
+          if [[ "${{ needs.api.result }}" != "success" ]]; then
+            echo "API job failed or was cancelled (result: ${{ needs.api.result }})."
             exit 1
           fi
           echo "All CI workflow checks passed successfully!"

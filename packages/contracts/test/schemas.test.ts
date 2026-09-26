@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   authResponseSchema,
+  checkEmailInputSchema,
+  checkEmailResponseSchema,
   clientListQuerySchema,
   clientSchema,
+  createClientInputSchema,
+  createInvoiceInputSchema,
   dashboardClientSummarySchema,
   dashboardSummarySchema,
   dashboardTotalsSchema,
@@ -14,6 +18,8 @@ import {
   registerInputSchema,
   registerStep1Schema,
   registerStep2Schema,
+  updateClientInputSchema,
+  updateInvoiceInputSchema,
   updateMeInputSchema,
   userSchema,
 } from '../src/index.js';
@@ -110,6 +116,24 @@ describe('auth schemas', () => {
       authResponseSchema.safeParse({ token: 'abc', user: validUser }).success,
     ).toBe(true);
   });
+
+  it('parses CheckEmailInput', () => {
+    expect(
+      checkEmailInputSchema.safeParse({ email: 'maicon@example.com' }).success,
+    ).toBe(true);
+  });
+
+  it('rejects CheckEmailInput with invalid email', () => {
+    expect(
+      checkEmailInputSchema.safeParse({ email: 'not-an-email' }).success,
+    ).toBe(false);
+  });
+
+  it('parses CheckEmailResponse', () => {
+    expect(
+      checkEmailResponseSchema.safeParse({ available: true }).success,
+    ).toBe(true);
+  });
 });
 
 describe('user schemas', () => {
@@ -198,6 +222,41 @@ describe('client schemas', () => {
   it('parses empty ClientListQuery', () => {
     expect(clientListQuerySchema.safeParse({}).success).toBe(true);
   });
+
+  it('parses ClientListQuery with sort', () => {
+    expect(clientListQuerySchema.safeParse({ sort: '-username' }).success).toBe(
+      true,
+    );
+  });
+
+  it('rejects ClientListQuery with invalid sort', () => {
+    expect(clientListQuerySchema.safeParse({ sort: 'email' }).success).toBe(
+      false,
+    );
+  });
+
+  it('parses CreateClientInput without id and status', () => {
+    const { id, status, ...input } = validClient;
+    expect(createClientInputSchema.safeParse(input).success).toBe(true);
+  });
+
+  it('rejects CreateClientInput with invalid cpf', () => {
+    const { id, status, ...input } = validClient;
+    expect(
+      createClientInputSchema.safeParse({ ...input, cpf: '11111111111' })
+        .success,
+    ).toBe(false);
+  });
+
+  it('parses UpdateClientInput with a partial payload', () => {
+    expect(
+      updateClientInputSchema.safeParse({ username: 'Nova Cris' }).success,
+    ).toBe(true);
+  });
+
+  it('parses empty UpdateClientInput', () => {
+    expect(updateClientInputSchema.safeParse({}).success).toBe(true);
+  });
 });
 
 describe('invoice schemas', () => {
@@ -248,6 +307,41 @@ describe('invoice schemas', () => {
 
   it('parses empty InvoiceListQuery', () => {
     expect(invoiceListQuerySchema.safeParse({}).success).toBe(true);
+  });
+
+  it('parses InvoiceListQuery with clientId', () => {
+    expect(invoiceListQuerySchema.safeParse({ clientId: uuid }).success).toBe(
+      true,
+    );
+  });
+
+  it('rejects InvoiceListQuery with invalid clientId', () => {
+    expect(
+      invoiceListQuerySchema.safeParse({ clientId: 'not-a-uuid' }).success,
+    ).toBe(false);
+  });
+
+  it('parses CreateInvoiceInput without id, paidAt and status', () => {
+    const { id, paidAt, status, ...input } = validInvoice;
+    expect(createInvoiceInputSchema.safeParse(input).success).toBe(true);
+  });
+
+  it('rejects CreateInvoiceInput with negative amountCents', () => {
+    const { id, paidAt, status, ...input } = validInvoice;
+    expect(
+      createInvoiceInputSchema.safeParse({ ...input, amountCents: -1 }).success,
+    ).toBe(false);
+  });
+
+  it('parses UpdateInvoiceInput with a partial payload', () => {
+    expect(
+      updateInvoiceInputSchema.safeParse({ description: 'Nova descrição' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('parses empty UpdateInvoiceInput', () => {
+    expect(updateInvoiceInputSchema.safeParse({}).success).toBe(true);
   });
 });
 

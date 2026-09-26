@@ -40,3 +40,15 @@ export const authResponseSchema = z.object({
 });
 
 export type AuthResponse = z.infer<typeof authResponseSchema>;
+
+export const checkEmailInputSchema = z.object({
+  email: z.email(),
+});
+
+export type CheckEmailInput = z.infer<typeof checkEmailInputSchema>;
+
+export const checkEmailResponseSchema = z.object({
+  available: z.boolean(),
+});
+
+export type CheckEmailResponse = z.infer<typeof checkEmailResponseSchema>;

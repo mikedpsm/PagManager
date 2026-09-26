@@ -45,6 +45,9 @@ export const clients = pgTable(
   'clients',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     username: text('username').notNull(),
     email: citext('email').notNull().unique(),
     cpf: text('cpf').notNull().unique(),
@@ -63,7 +66,10 @@ export const clients = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index('clients_status_idx').on(table.status)],
+  (table) => [
+    index('clients_user_id_idx').on(table.userId),
+    index('clients_status_idx').on(table.status),
+  ],
 );
 
 export const invoices = pgTable(

@@ -40,6 +40,7 @@ async function expectSeededData(db: Db): Promise<void> {
   expect(clientRows).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
+        userId: demoUser.id,
         username: 'Cris Vieira',
         email: 'cris.vieira@yahoo.net',
         cpf: '96266121967',
@@ -53,6 +54,7 @@ async function expectSeededData(db: Db): Promise<void> {
         status: 'overdue',
       }),
       expect.objectContaining({
+        userId: demoUser.id,
         username: 'Camilla Straider',
         email: 'cami-stdr@protonmail.edu',
         cpf: '89940018237',
@@ -66,6 +68,7 @@ async function expectSeededData(db: Db): Promise<void> {
         status: 'ok',
       }),
       expect.objectContaining({
+        userId: demoUser.id,
         username: 'Dio Costa',
         email: 'dicosta@hotmail.net',
         cpf: '02180514173',
@@ -177,6 +180,7 @@ describe('in-memory PGlite', () => {
       await expect(
         db.client.insert(clients).values({
           id: '00000000-0000-4000-8000-000000000199',
+          userId: demoUser.id,
           username: 'Duplicate Email',
           email: 'Cris.Vieira@Yahoo.Net',
           cpf: '11111111111',

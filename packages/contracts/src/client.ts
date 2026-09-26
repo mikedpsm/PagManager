@@ -23,9 +23,21 @@ export const clientSchema = z.object({
 
 export type Client = z.infer<typeof clientSchema>;
 
+export const createClientInputSchema = clientSchema.omit({
+  id: true,
+  status: true,
+});
+
+export type CreateClientInput = z.infer<typeof createClientInputSchema>;
+
+export const updateClientInputSchema = createClientInputSchema.partial();
+
+export type UpdateClientInput = z.infer<typeof updateClientInputSchema>;
+
 export const clientListQuerySchema = z.object({
   search: z.string().optional(),
   status: clientStatusSchema.optional(),
+  sort: z.enum(['username', '-username']).optional(),
 });
 
 export type ClientListQuery = z.infer<typeof clientListQuerySchema>;
