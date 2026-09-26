@@ -12,9 +12,10 @@ type NewClient = InferInsertModel<typeof clientsTable>;
 type NewInvoice = InferInsertModel<typeof invoicesTable>;
 
 export const DISABLED_PASSWORD_HASH = '!disabled!demo-user-has-no-password';
+const DEMO_USER_ID = '00000000-0000-4000-8000-000000000001';
 
 export const demoUser: NewUser = {
-  id: '00000000-0000-4000-8000-000000000001',
+  id: DEMO_USER_ID,
   username: 'Demo User',
   email: 'demo@pagmanager.dev',
   cpf: null,
@@ -25,7 +26,7 @@ export const demoUser: NewUser = {
 export const seedClients: NewClient[] = [
   {
     id: '00000000-0000-4000-8000-000000000101',
-    userId: demoUser.id!,
+    userId: DEMO_USER_ID,
     username: 'Cris Vieira',
     email: 'cris.vieira@yahoo.net',
     cpf: '96266121967',
@@ -40,7 +41,7 @@ export const seedClients: NewClient[] = [
   },
   {
     id: '00000000-0000-4000-8000-000000000102',
-    userId: demoUser.id!,
+    userId: DEMO_USER_ID,
     username: 'Camilla Straider',
     email: 'cami-stdr@protonmail.edu',
     cpf: '89940018237',
@@ -55,7 +56,7 @@ export const seedClients: NewClient[] = [
   },
   {
     id: '00000000-0000-4000-8000-000000000103',
-    userId: demoUser.id!,
+    userId: DEMO_USER_ID,
     username: 'Dio Costa',
     email: 'dicosta@hotmail.net',
     cpf: '02180514173',
