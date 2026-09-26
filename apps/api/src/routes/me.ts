@@ -1,11 +1,15 @@
-import { normalizeCpf, updateMeInputSchema, userSchema } from '@pagmanager/contracts';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import {
+  normalizeCpf,
+  updateMeInputSchema,
+  userSchema,
+} from '@pagmanager/contracts';
 import { users } from '@pagmanager/db';
 import { and, eq, ne, or, type SQL } from 'drizzle-orm';
-import { OpenAPIHono } from '@hono/zod-openapi';
 
 import { client } from '../db-client.js';
-import { hashPassword } from '../security/password.js';
 import { AppError } from '../errors.js';
+import { hashPassword } from '../security/password.js';
 import type { AppDeps, AppEnv } from '../types.js';
 
 export function createMeRoutes(deps: AppDeps) {
@@ -39,8 +43,10 @@ export function createMeRoutes(deps: AppDeps) {
       input.cpf !== undefined ? normalizeCpf(input.cpf) : undefined;
 
     const matchConditions: SQL[] = [];
-    if (input.email !== undefined) matchConditions.push(eq(users.email, input.email));
-    if (normalizedCpf !== undefined) matchConditions.push(eq(users.cpf, normalizedCpf));
+    if (input.email !== undefined)
+      matchConditions.push(eq(users.email, input.email));
+    if (normalizedCpf !== undefined)
+      matchConditions.push(eq(users.cpf, normalizedCpf));
 
     if (matchConditions.length > 0) {
       const duplicateCondition = or(...matchConditions);

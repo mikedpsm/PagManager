@@ -1,6 +1,6 @@
+import type { InvoiceListQuery, InvoiceStatus } from '@pagmanager/contracts';
 import type { Db } from '@pagmanager/db';
 import { clients, invoices } from '@pagmanager/db';
-import type { InvoiceListQuery, InvoiceStatus } from '@pagmanager/contracts';
 import { and, asc, eq, type SQL, sql } from 'drizzle-orm';
 
 import { client } from '../db-client.js';

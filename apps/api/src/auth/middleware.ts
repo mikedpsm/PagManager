@@ -1,10 +1,9 @@
 import { users } from '@pagmanager/db';
 import { eq } from 'drizzle-orm';
 import type { MiddlewareHandler } from 'hono';
-
-import { verifyAuthToken } from './jwt.js';
 import { AppError } from '../errors.js';
 import type { AppDeps, AppEnv } from '../types.js';
+import { verifyAuthToken } from './jwt.js';
 
 const BEARER_PREFIX = 'Bearer ';
 
@@ -12,7 +11,7 @@ export function authMiddleware(deps: AppDeps): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     const header = c.req.header('Authorization');
 
-    if (!header || !header.startsWith(BEARER_PREFIX)) {
+    if (!header?.startsWith(BEARER_PREFIX)) {
       throw AppError.unauthorized('Missing or malformed Authorization header');
     }
 

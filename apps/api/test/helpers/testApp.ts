@@ -1,4 +1,4 @@
-import { createInMemoryDb, runMigrations, type Db } from '@pagmanager/db';
+import { createInMemoryDb, type Db, runMigrations } from '@pagmanager/db';
 
 import { createApp } from '../../src/app.js';
 import type { AppConfig } from '../../src/env.js';
@@ -68,7 +68,10 @@ export async function registerUser(
  * Returns a `request(path, init)` function that automatically attaches the
  * given bearer token and a JSON content-type header.
  */
-export function authedRequest(app: ReturnType<typeof createApp>, token: string) {
+export function authedRequest(
+  app: ReturnType<typeof createApp>,
+  token: string,
+) {
   return (path: string, init: RequestInit = {}) =>
     app.request(path, {
       ...init,

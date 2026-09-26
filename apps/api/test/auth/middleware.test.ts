@@ -1,4 +1,9 @@
-import { createInMemoryDb, runMigrations, users, type Db } from '@pagmanager/db';
+import {
+  createInMemoryDb,
+  type Db,
+  runMigrations,
+  users,
+} from '@pagmanager/db';
 import { Hono } from 'hono';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -24,7 +29,10 @@ describe('authMiddleware', () => {
         passwordHash: 'pbkdf2$600000$salt$hash',
       })
       .returning({ id: users.id });
-    userId = inserted!.id;
+    if (!inserted) {
+      throw new Error('Failed to create test user');
+    }
+    userId = inserted.id;
   });
 
   afterAll(async () => {

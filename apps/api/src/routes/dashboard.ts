@@ -1,6 +1,6 @@
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { dashboardSummarySchema } from '@pagmanager/contracts';
 import { clients, invoices } from '@pagmanager/db';
-import { OpenAPIHono } from '@hono/zod-openapi';
 import { and, asc, eq, sql } from 'drizzle-orm';
 
 import type { AppDeps, AppEnv } from '../types.js';

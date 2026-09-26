@@ -1,3 +1,4 @@
+import { OpenAPIHono } from '@hono/zod-openapi';
 import {
   authResponseSchema,
   checkEmailInputSchema,
@@ -7,12 +8,11 @@ import {
 } from '@pagmanager/contracts';
 import { users } from '@pagmanager/db';
 import { eq } from 'drizzle-orm';
-import { OpenAPIHono } from '@hono/zod-openapi';
 
 import { signAuthToken } from '../auth/jwt.js';
 import { client } from '../db-client.js';
-import { hashPassword, verifyPassword } from '../security/password.js';
 import { AppError } from '../errors.js';
+import { hashPassword, verifyPassword } from '../security/password.js';
 import type { AppDeps, AppEnv } from '../types.js';
 
 async function emailExists(deps: AppDeps, email: string): Promise<boolean> {
@@ -131,10 +131,7 @@ export function createAuthRoutes(deps: AppDeps) {
   auth.post('/check-email', async (c) => {
     const input = checkEmailInputSchema.parse(await c.req.json());
     const exists = await emailExists(deps, input.email);
-    return c.json(
-      checkEmailResponseSchema.parse({ available: !exists }),
-      200,
-    );
+    return c.json(checkEmailResponseSchema.parse({ available: !exists }), 200);
   });
 
   return auth;

@@ -1,3 +1,4 @@
+import { OpenAPIHono } from '@hono/zod-openapi';
 import {
   clientListQuerySchema,
   clientSchema,
@@ -5,18 +6,16 @@ import {
   normalizeCpf,
   updateClientInputSchema,
 } from '@pagmanager/contracts';
-import { OpenAPIHono } from '@hono/zod-openapi';
-
+import { AppError } from '../errors.js';
 import {
+  type ClientRow,
   deleteClientById,
   findClientByCpfOrEmail,
   findClientById,
   insertClient,
   listClients,
   updateClientById,
-  type ClientRow,
 } from '../repositories/clients.js';
-import { AppError } from '../errors.js';
 import type { AppDeps, AppEnv } from '../types.js';
 
 function toResponse(row: ClientRow) {
@@ -72,7 +71,9 @@ export function createClientsRoutes(deps: AppDeps) {
     // let a request pass this check only to fail with a raw 23505 unique
     // violation from Postgres, which is worse UX than a clean 409 up front.
     if (await findClientByCpfOrEmail(deps.db, { cpf, email: input.email })) {
-      throw AppError.conflict('A client with the same CPF or email already exists');
+      throw AppError.conflict(
+        'A client with the same CPF or email already exists',
+      );
     }
 
     const { id } = await insertClient(deps.db, {

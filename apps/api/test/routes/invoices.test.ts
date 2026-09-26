@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createApp } from '../../src/app.js';
+import type { createApp } from '../../src/app.js';
 import {
   authedRequest,
   closeTestApp,
@@ -162,7 +162,9 @@ describe('invoices routes', () => {
   });
 
   it('lists invoices filtered by status and clientId', async () => {
-    const res = await asA()(`/api/v1/invoices?clientId=${clientAId}&status=paid`);
+    const res = await asA()(
+      `/api/v1/invoices?clientId=${clientAId}&status=paid`,
+    );
     expect(res.status).toBe(200);
     const list = await res.json();
     expect(list.some((i: { id: string }) => i.id === invoiceId)).toBe(true);
@@ -180,7 +182,9 @@ describe('invoices routes', () => {
     });
     const created = await create.json();
 
-    const del = await asA()(`/api/v1/invoices/${created.id}`, { method: 'DELETE' });
+    const del = await asA()(`/api/v1/invoices/${created.id}`, {
+      method: 'DELETE',
+    });
     expect(del.status).toBe(204);
 
     const getRes = await asA()(`/api/v1/invoices/${created.id}`);

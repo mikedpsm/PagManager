@@ -119,21 +119,20 @@ describe('auth schemas', () => {
 
   it('parses CheckEmailInput', () => {
     expect(
-      checkEmailInputSchema.safeParse({ email: 'maicon@example.com' })
-        .success,
+      checkEmailInputSchema.safeParse({ email: 'maicon@example.com' }).success,
     ).toBe(true);
   });
 
   it('rejects CheckEmailInput with invalid email', () => {
-    expect(checkEmailInputSchema.safeParse({ email: 'not-an-email' }).success).toBe(
-      false,
-    );
+    expect(
+      checkEmailInputSchema.safeParse({ email: 'not-an-email' }).success,
+    ).toBe(false);
   });
 
   it('parses CheckEmailResponse', () => {
-    expect(checkEmailResponseSchema.safeParse({ available: true }).success).toBe(
-      true,
-    );
+    expect(
+      checkEmailResponseSchema.safeParse({ available: true }).success,
+    ).toBe(true);
   });
 });
 
@@ -225,15 +224,15 @@ describe('client schemas', () => {
   });
 
   it('parses ClientListQuery with sort', () => {
-    expect(
-      clientListQuerySchema.safeParse({ sort: '-username' }).success,
-    ).toBe(true);
+    expect(clientListQuerySchema.safeParse({ sort: '-username' }).success).toBe(
+      true,
+    );
   });
 
   it('rejects ClientListQuery with invalid sort', () => {
-    expect(
-      clientListQuerySchema.safeParse({ sort: 'email' }).success,
-    ).toBe(false);
+    expect(clientListQuerySchema.safeParse({ sort: 'email' }).success).toBe(
+      false,
+    );
   });
 
   it('parses CreateClientInput without id and status', () => {
@@ -311,9 +310,9 @@ describe('invoice schemas', () => {
   });
 
   it('parses InvoiceListQuery with clientId', () => {
-    expect(
-      invoiceListQuerySchema.safeParse({ clientId: uuid }).success,
-    ).toBe(true);
+    expect(invoiceListQuerySchema.safeParse({ clientId: uuid }).success).toBe(
+      true,
+    );
   });
 
   it('rejects InvoiceListQuery with invalid clientId', () => {
@@ -330,8 +329,7 @@ describe('invoice schemas', () => {
   it('rejects CreateInvoiceInput with negative amountCents', () => {
     const { id, paidAt, status, ...input } = validInvoice;
     expect(
-      createInvoiceInputSchema.safeParse({ ...input, amountCents: -1 })
-        .success,
+      createInvoiceInputSchema.safeParse({ ...input, amountCents: -1 }).success,
     ).toBe(false);
   });
 

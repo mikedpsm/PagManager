@@ -1,7 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createApp } from '../../src/app.js';
-import { closeTestApp, createTestApp, type TestApp } from '../helpers/testApp.js';
+import type { createApp } from '../../src/app.js';
+import {
+  closeTestApp,
+  createTestApp,
+  type TestApp,
+} from '../helpers/testApp.js';
 
 describe('auth routes', () => {
   let testApp: TestApp;

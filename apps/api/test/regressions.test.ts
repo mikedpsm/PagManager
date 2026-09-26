@@ -7,7 +7,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createApp } from '../src/app.js';
+import type { createApp } from '../src/app.js';
 import {
   authedRequest,
   closeTestApp,
@@ -124,7 +124,11 @@ describe('legacy regression scenarios', () => {
         init: {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: '', email: 'not-an-email', passwd: '1' }),
+          body: JSON.stringify({
+            username: '',
+            email: 'not-an-email',
+            passwd: '1',
+          }),
         },
       },
       {
@@ -269,7 +273,8 @@ describe('legacy regression scenarios', () => {
       ).status,
     ).toBe(404);
     expect(
-      (await asA(`/api/v1/invoices/${invoiceB.id}`, { method: 'DELETE' })).status,
+      (await asA(`/api/v1/invoices/${invoiceB.id}`, { method: 'DELETE' }))
+        .status,
     ).toBe(404);
 
     // A's dashboard totals never include any of B's amounts.

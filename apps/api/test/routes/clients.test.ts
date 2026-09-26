@@ -1,8 +1,8 @@
-import { clients, invoices, type Db } from '@pagmanager/db';
+import { clients, type Db, invoices } from '@pagmanager/db';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createApp } from '../../src/app.js';
+import type { createApp } from '../../src/app.js';
 import {
   authedRequest,
   closeTestApp,
@@ -97,8 +97,14 @@ describe('clients routes', () => {
 
     const resA = await asA()('/api/v1/clients');
     const listA = await resA.json();
-    expect(listA.some((c: { email: string }) => c.email === 'client-one@example.com')).toBe(true);
-    expect(listA.some((c: { email: string }) => c.email === 'client-b@example.com')).toBe(false);
+    expect(
+      listA.some(
+        (c: { email: string }) => c.email === 'client-one@example.com',
+      ),
+    ).toBe(true);
+    expect(
+      listA.some((c: { email: string }) => c.email === 'client-b@example.com'),
+    ).toBe(false);
   });
 
   it('returns 404 (not 403) when getting another user client by id', async () => {
@@ -110,7 +116,9 @@ describe('clients routes', () => {
   });
 
   it('returns 404 for a non-existent client id', async () => {
-    const res = await asA()('/api/v1/clients/00000000-0000-0000-0000-000000000000');
+    const res = await asA()(
+      '/api/v1/clients/00000000-0000-0000-0000-000000000000',
+    );
     expect(res.status).toBe(404);
   });
 
@@ -163,7 +171,9 @@ describe('clients routes', () => {
 
     const filtered = await asA()('/api/v1/clients?status=overdue');
     const filteredList = await filtered.json();
-    expect(filteredList.some((c: { id: string }) => c.id === clientId)).toBe(true);
+    expect(filteredList.some((c: { id: string }) => c.id === clientId)).toBe(
+      true,
+    );
   });
 
   it('DELETE removes the client scoped to the current user', async () => {
@@ -178,7 +188,9 @@ describe('clients routes', () => {
     });
     const created = await create.json();
 
-    const del = await asA()(`/api/v1/clients/${created.id}`, { method: 'DELETE' });
+    const del = await asA()(`/api/v1/clients/${created.id}`, {
+      method: 'DELETE',
+    });
     expect(del.status).toBe(204);
 
     const getRes = await asA()(`/api/v1/clients/${created.id}`);

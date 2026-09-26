@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createApp } from '../../src/app.js';
+import type { createApp } from '../../src/app.js';
 import {
   authedRequest,
   closeTestApp,

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { initializeDb, type Db } from '@pagmanager/db';
+import { type Db, initializeDb } from '@pagmanager/db';
 import { compress } from 'hono/compress';
 
 import { createApp } from './app.js';

@@ -1,6 +1,6 @@
+import type { ClientListQuery, ClientStatus } from '@pagmanager/contracts';
 import type { Db } from '@pagmanager/db';
 import { clients, invoices } from '@pagmanager/db';
-import type { ClientListQuery, ClientStatus } from '@pagmanager/contracts';
 import { and, asc, desc, eq, ilike, ne, or, type SQL, sql } from 'drizzle-orm';
 
 import { client } from '../db-client.js';

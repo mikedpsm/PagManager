@@ -35,10 +35,7 @@ describe('loadEnv', () => {
 
     expect(config.jwtSecret).toMatch(/^[0-9a-f]{64}$/);
 
-    const persisted = await readFile(
-      path.join(dataDir, 'jwt-secret'),
-      'utf8',
-    );
+    const persisted = await readFile(path.join(dataDir, 'jwt-secret'), 'utf8');
     expect(persisted.trim()).toBe(config.jwtSecret);
   });
 

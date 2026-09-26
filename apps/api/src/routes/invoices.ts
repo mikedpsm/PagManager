@@ -1,22 +1,21 @@
+import { OpenAPIHono } from '@hono/zod-openapi';
 import {
   createInvoiceInputSchema,
   invoiceListQuerySchema,
   invoiceSchema,
   updateInvoiceInputSchema,
 } from '@pagmanager/contracts';
-import { OpenAPIHono } from '@hono/zod-openapi';
-
+import { AppError } from '../errors.js';
 import {
   clientBelongsToUser,
   deleteInvoiceById,
   findInvoiceById,
+  type InvoiceRow,
   insertInvoice,
   listInvoices,
   markInvoicePaid,
   updateInvoiceById,
-  type InvoiceRow,
 } from '../repositories/invoices.js';
-import { AppError } from '../errors.js';
 import type { AppDeps, AppEnv } from '../types.js';
 
 function toResponse(row: InvoiceRow) {
@@ -100,8 +99,10 @@ export function createInvoicesRoutes(deps: AppDeps) {
     // overwrote `duedate` with `new Date()` even when the request omitted
     // it entirely, silently corrupting due dates on unrelated edits.
     const updates: Record<string, unknown> = {};
-    if (input.description !== undefined) updates.description = input.description;
-    if (input.amountCents !== undefined) updates.amountCents = input.amountCents;
+    if (input.description !== undefined)
+      updates.description = input.description;
+    if (input.amountCents !== undefined)
+      updates.amountCents = input.amountCents;
     if (input.dueDate !== undefined) updates.dueDate = input.dueDate;
     if (input.clientId !== undefined) updates.clientId = input.clientId;
 

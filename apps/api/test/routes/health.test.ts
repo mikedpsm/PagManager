@@ -2,7 +2,11 @@ import type { Db } from '@pagmanager/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createApp } from '../../src/app.js';
-import { closeTestApp, createTestApp, type TestApp } from '../helpers/testApp.js';
+import {
+  closeTestApp,
+  createTestApp,
+  type TestApp,
+} from '../helpers/testApp.js';
 
 describe('health route', () => {
   let testApp: TestApp;

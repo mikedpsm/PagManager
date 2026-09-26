@@ -5,9 +5,7 @@ import { hashPassword, verifyPassword } from '../../src/security/password.js';
 describe('password hashing', () => {
   it('produces a hash matching the expected pbkdf2$<iterations>$<salt>$<hash> format', async () => {
     const hash = await hashPassword('correct horse battery staple');
-    expect(hash).toMatch(
-      /^pbkdf2\$\d+\$[A-Za-z0-9_-]+\$[A-Za-z0-9_-]+$/,
-    );
+    expect(hash).toMatch(/^pbkdf2\$\d+\$[A-Za-z0-9_-]+\$[A-Za-z0-9_-]+$/);
   });
 
   it('encodes exactly 600000 iterations', async () => {
@@ -25,15 +23,13 @@ describe('password hashing', () => {
 
   it('returns false for a wrong password', async () => {
     const hash = await hashPassword('correct horse battery staple');
-    await expect(verifyPassword('wrong password', hash)).resolves.toBe(
-      false,
-    );
+    await expect(verifyPassword('wrong password', hash)).resolves.toBe(false);
   });
 
   it('returns false (never throws) for a malformed hash string', async () => {
-    await expect(
-      verifyPassword('anything', 'not-a-valid-hash'),
-    ).resolves.toBe(false);
+    await expect(verifyPassword('anything', 'not-a-valid-hash')).resolves.toBe(
+      false,
+    );
     await expect(verifyPassword('anything', '')).resolves.toBe(false);
     await expect(
       verifyPassword('anything', 'pbkdf2$notanumber$salt$hash'),
