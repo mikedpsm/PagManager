@@ -16,8 +16,21 @@ export const invoiceSchema = z.object({
 
 export type Invoice = z.infer<typeof invoiceSchema>;
 
+export const createInvoiceInputSchema = invoiceSchema.omit({
+  id: true,
+  paidAt: true,
+  status: true,
+});
+
+export type CreateInvoiceInput = z.infer<typeof createInvoiceInputSchema>;
+
+export const updateInvoiceInputSchema = createInvoiceInputSchema.partial();
+
+export type UpdateInvoiceInput = z.infer<typeof updateInvoiceInputSchema>;
+
 export const invoiceListQuerySchema = z.object({
   status: invoiceStatusSchema.optional(),
+  clientId: z.uuid().optional(),
 });
 
 export type InvoiceListQuery = z.infer<typeof invoiceListQuerySchema>;

@@ -42,6 +42,7 @@ node_modules/
 jspm_packages/
 
 pglite/
+apps/*/data/
 
 # TypeScript v1 declaration files
 typings/

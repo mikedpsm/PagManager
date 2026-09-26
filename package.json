@@ -24,8 +24,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "pnpm --filter @pagmanager/db build && node ./legacy/src/index.js",
-    "dev": "pnpm --filter @pagmanager/db build && nodemon ./legacy/src/index.js",
+    "start": "node apps/api/dist/server.mjs",
+    "dev": "pnpm --filter @pagmanager/api dev",
     "lint": "npx @biomejs/biome check .",
     "lint:fix": "npx @biomejs/biome check --write .",
     "db:migrate": "pnpm --filter @pagmanager/db migrate",

@@ -25,6 +25,7 @@ export const demoUser: NewUser = {
 export const seedClients: NewClient[] = [
   {
     id: '00000000-0000-4000-8000-000000000101',
+    userId: demoUser.id!,
     username: 'Cris Vieira',
     email: 'cris.vieira@yahoo.net',
     cpf: '96266121967',
@@ -39,6 +40,7 @@ export const seedClients: NewClient[] = [
   },
   {
     id: '00000000-0000-4000-8000-000000000102',
+    userId: demoUser.id!,
     username: 'Camilla Straider',
     email: 'cami-stdr@protonmail.edu',
     cpf: '89940018237',
@@ -53,6 +55,7 @@ export const seedClients: NewClient[] = [
   },
   {
     id: '00000000-0000-4000-8000-000000000103',
+    userId: demoUser.id!,
     username: 'Dio Costa',
     email: 'dicosta@hotmail.net',
     cpf: '02180514173',
