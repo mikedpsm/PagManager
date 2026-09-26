@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { PGlite } from '@electric-sql/pglite';
@@ -41,6 +42,9 @@ export function createPostgresDb(connectionString: string): Db {
 }
 
 export function createPGliteDb(dataDir?: string): Db {
+  if (dataDir) {
+    mkdirSync(path.dirname(dataDir), { recursive: true });
+  }
   const pglite = dataDir
     ? new PGlite(dataDir, { extensions: { citext } })
     : new PGlite({ extensions: { citext } });

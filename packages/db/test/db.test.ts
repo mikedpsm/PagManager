@@ -10,6 +10,7 @@ import {
   clients,
   createDb,
   createInMemoryDb,
+  initializeDb,
   invoices,
   runMigrations,
   seed,
@@ -229,12 +230,31 @@ describe('in-memory PGlite', () => {
   it('createDb without DATABASE_URL uses persistent PGlite under DATA_DIR/pglite', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'pagmanager-db-'));
     try {
-      const db = createDb({ DATA_DIR: tmpDir });
+      const dataDir = path.join(tmpDir, 'nested', 'data');
+      const db = createDb({ DATA_DIR: dataDir });
       expect(db.driver).toBe('pglite');
       await migrateAndSeed(db);
       await expectSeededData(db);
       await db.close();
-      expect(existsSync(path.join(tmpDir, 'pglite'))).toBe(true);
+      expect(existsSync(path.join(dataDir, 'pglite'))).toBe(true);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('initializeDb applies migrations and returns a usable DB', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'pagmanager-init-'));
+    try {
+      const db = await initializeDb({ DATA_DIR: tmpDir });
+      try {
+        expect(db.driver).toBe('pglite');
+        await db.client.insert(users).values(demoUser);
+        const rows = await db.client.select().from(users);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]).toMatchObject({ email: demoUser.email });
+      } finally {
+        await db.close();
+      }
     } finally {
       rmSync(tmpDir, { recursive: true, force: true });
     }

@@ -125,6 +125,44 @@ jobs:
       - name: Run db tests (in-memory PGlite + real Postgres)
         run: pnpm --filter @pagmanager/db test
 
+      - name: Smoke test app startup (migrations before listen)
+        run: |
+          set -eu
+          work_dir="$RUNNER_TEMP/pagmanager-smoke"
+          mkdir -p "$work_dir"
+          log_file="$work_dir/app.log"
+          data_dir="$work_dir/pglite-data"
+          app_pid=""
+          cleanup() {
+            if [ -n "$app_pid" ] && kill -0 "$app_pid" 2>/dev/null; then
+              kill -TERM -"$app_pid" 2>/dev/null || true
+              wait "$app_pid" 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
+          PORT=5001 DATA_DIR="$data_dir" setsid pnpm start >"$log_file" 2>&1 &
+          app_pid=$!
+          status=1
+          i=0
+          while [ "$i" -lt 60 ]; do
+            if curl -fsS -o /dev/null http://127.0.0.1:5001/docs/; then
+              status=0
+              break
+            fi
+            if ! kill -0 "$app_pid" 2>/dev/null; then
+              break
+            fi
+            sleep 1
+            i=$((i + 1))
+          done
+          if [ "$status" -ne 0 ]; then
+            echo "App smoke test failed. App log:"
+            cat "$log_file"
+            exit 1
+          fi
+          cleanup
+          rm -rf "$work_dir"
+
   ci-status:
     name: All Checks Passed
     runs-on: ubuntu-latest
