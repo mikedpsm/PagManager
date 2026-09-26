@@ -6,7 +6,7 @@ import type { AppDeps } from '../types.js';
 export function createHealthRoute(deps: AppDeps) {
   const health = new Hono();
 
-  health.get('/', async (c) => {
+  const routes = health.get('/', async (c) => {
     try {
       await deps.db.client.execute(sql`select 1`);
       return c.json({ status: 'ok' }, 200);
@@ -16,5 +16,5 @@ export function createHealthRoute(deps: AppDeps) {
     }
   });
 
-  return health;
+  return routes;
 }

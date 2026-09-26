@@ -2,7 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { dashboardSummarySchema } from '@pagmanager/contracts';
 import { clients, invoices } from '@pagmanager/db';
 import { and, asc, eq, sql } from 'drizzle-orm';
-
+import { authMiddleware } from '../auth/middleware.js';
 import type { AppDeps, AppEnv } from '../types.js';
 
 export function createDashboardRoutes(deps: AppDeps) {
@@ -12,9 +12,9 @@ export function createDashboardRoutes(deps: AppDeps) {
         throw result.error;
       }
     },
-  });
+  }).use('*', authMiddleware(deps));
 
-  dashboard.get('/summary', async (c) => {
+  const routes = dashboard.get('/summary', async (c) => {
     const user = c.get('user');
 
     const [totalsRow] = await deps.db.client
@@ -72,5 +72,5 @@ export function createDashboardRoutes(deps: AppDeps) {
     return c.json(body, 200);
   });
 
-  return dashboard;
+  return routes;
 }
