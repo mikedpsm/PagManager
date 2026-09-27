@@ -264,6 +264,31 @@ jobs:
       - name: Run end-to-end tests
         run: pnpm test:e2e
 
+  container:
+    name: Container (build + runtime smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: pagmanager:ci
+          cache-from: type=gha,scope=pagmanager-ci
+          cache-to: type=gha,scope=pagmanager-ci,mode=max
+
+      - name: Enforce compressed image size budget
+        run: bash scripts/check-compressed-image-size.sh pagmanager:ci
+
+      - name: Verify UI, API health, and data persistence
+        run: bash scripts/container-smoke.sh pagmanager:ci
+
   ci-status:
     name: All Checks Passed
     runs-on: ubuntu-latest
@@ -274,6 +299,7 @@ jobs:
       - api
       - web
       - e2e
+      - container
     if: always()
     steps:
       - name: Evaluate status
@@ -300,6 +326,10 @@ jobs:
           fi
           if [[ "${{ needs.e2e.result }}" != "success" ]]; then
             echo "End-to-end job failed or was cancelled (result: ${{ needs.e2e.result }})."
+            exit 1
+          fi
+          if [[ "${{ needs.container.result }}" != "success" ]]; then
+            echo "Container job failed or was cancelled (result: ${{ needs.container.result }})."
             exit 1
           fi
           echo "All CI workflow checks passed successfully!"

@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pagmanager}
+      POSTGRES_USER: ${POSTGRES_USER:-pagmanager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    image: ${PAGMANAGER_IMAGE:-ghcr.io/mikedpsm/pagmanager:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      DATA_DIR: /data
+      DATABASE_URL: "postgres://${POSTGRES_USER:-pagmanager}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-pagmanager}"
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CORS_ORIGIN: "${CORS_ORIGIN:-*}"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - app-data:/data
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  postgres-data:

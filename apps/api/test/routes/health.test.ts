@@ -23,29 +23,35 @@ describe('health route', () => {
     await closeTestApp(testApp);
   });
 
-  it('is unauthenticated and does a real DB round-trip', async () => {
-    const res = await app.request('/health');
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: 'ok' });
-  });
+  it.each(['/health', '/api/v1/health'])(
+    'is unauthenticated at %s and does a real DB round-trip',
+    async (path) => {
+      const res = await app.request(path);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ status: 'ok' });
+    },
+  );
 
-  it('returns 503 with an error message when the DB round-trip fails', async () => {
-    const brokenApp = createApp({
-      db: {
-        ...db,
-        client: {
-          execute: () => {
-            throw new Error('connection refused');
+  it.each(['/health', '/api/v1/health'])(
+    'returns 503 at %s when the DB round-trip fails',
+    async (path) => {
+      const brokenApp = createApp({
+        db: {
+          ...db,
+          client: {
+            execute: () => {
+              throw new Error('connection refused');
+            },
           },
-        },
-      } as unknown as Db,
-      env,
-    });
+        } as unknown as Db,
+        env,
+      });
 
-    const res = await brokenApp.request('/health');
-    expect(res.status).toBe(503);
-    const body = await res.json();
-    expect(body.status).toBe('error');
-    expect(body.message).toContain('connection refused');
-  });
+      const res = await brokenApp.request(path);
+      expect(res.status).toBe(503);
+      const body = await res.json();
+      expect(body.status).toBe('error');
+      expect(body.message).toContain('connection refused');
+    },
+  );
 });
