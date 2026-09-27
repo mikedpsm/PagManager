@@ -199,6 +199,44 @@ jobs:
           cleanup
           rm -rf "$work_dir"
 
+  web:
+    name: Web (typecheck + test + builds)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace types
+        run: |
+          pnpm --filter @pagmanager/contracts build
+          pnpm --filter @pagmanager/db build
+
+      - name: Typecheck web
+        run: pnpm --filter @pagmanager/web typecheck
+
+      - name: Run web tests
+        run: pnpm --filter @pagmanager/web test
+
+      - name: Build web
+        run: pnpm --filter @pagmanager/web build
+
+      - name: Build Storybook
+        run: pnpm --filter @pagmanager/web storybook:build
+
   ci-status:
     name: All Checks Passed
     runs-on: ubuntu-latest
@@ -207,6 +245,7 @@ jobs:
       - contracts
       - db
       - api
+      - web
     if: always()
     steps:
       - name: Evaluate status
@@ -225,6 +264,10 @@ jobs:
           fi
           if [[ "${{ needs.api.result }}" != "success" ]]; then
             echo "API job failed or was cancelled (result: ${{ needs.api.result }})."
+            exit 1
+          fi
+          if [[ "${{ needs.web.result }}" != "success" ]]; then
+            echo "Web job failed or was cancelled (result: ${{ needs.web.result }})."
             exit 1
           fi
           echo "All CI workflow checks passed successfully!"

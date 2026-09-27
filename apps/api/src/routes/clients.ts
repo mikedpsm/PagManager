@@ -6,6 +6,8 @@ import {
   normalizeCpf,
   updateClientInputSchema,
 } from '@pagmanager/contracts';
+import { z } from 'zod';
+import { authMiddleware } from '../auth/middleware.js';
 import { AppError } from '../errors.js';
 import {
   type ClientRow,
@@ -17,6 +19,7 @@ import {
   updateClientById,
 } from '../repositories/clients.js';
 import type { AppDeps, AppEnv } from '../types.js';
+import { validateRequest } from '../validation.js';
 
 function toResponse(row: ClientRow) {
   return clientSchema.parse({
@@ -42,116 +45,126 @@ export function createClientsRoutes(deps: AppDeps) {
         throw result.error;
       }
     },
-  });
+  }).use('*', authMiddleware(deps));
 
-  clients.get('/', async (c) => {
-    const user = c.get('user');
-    const query = clientListQuerySchema.parse(c.req.query());
-    const rows = await listClients(deps.db, user.id, query);
-    return c.json(rows.map(toResponse), 200);
-  });
+  const clientIdSchema = z.object({ id: z.uuid() });
+  const routes = clients
+    .get('/', validateRequest('query', clientListQuerySchema), async (c) => {
+      const user = c.get('user');
+      const query = c.req.valid('query');
+      const rows = await listClients(deps.db, user.id, query);
+      return c.json(rows.map(toResponse), 200);
+    })
 
-  clients.get('/:id', async (c) => {
-    const user = c.get('user');
-    const row = await findClientById(deps.db, user.id, c.req.param('id'));
-    if (!row) {
-      throw AppError.notFound('Client not found');
-    }
-    return c.json(toResponse(row), 200);
-  });
+    .get('/:id', validateRequest('param', clientIdSchema), async (c) => {
+      const user = c.get('user');
+      const { id } = c.req.valid('param');
+      const row = await findClientById(deps.db, user.id, id);
+      if (!row) {
+        throw AppError.notFound('Client not found');
+      }
+      return c.json(toResponse(row), 200);
+    })
 
-  clients.post('/', async (c) => {
-    const user = c.get('user');
-    const input = createClientInputSchema.parse(await c.req.json());
-    const cpf = normalizeCpf(input.cpf);
+    .post('/', validateRequest('json', createClientInputSchema), async (c) => {
+      const user = c.get('user');
+      const input = c.req.valid('json');
+      const cpf = normalizeCpf(input.cpf);
 
-    // Note: clients.cpf and clients.email are globally unique columns in the
-    // schema (not scoped per user), so duplicate checks here are
-    // intentionally global rather than scoped by userId - scoping them would
-    // let a request pass this check only to fail with a raw 23505 unique
-    // violation from Postgres, which is worse UX than a clean 409 up front.
-    if (await findClientByCpfOrEmail(deps.db, { cpf, email: input.email })) {
-      throw AppError.conflict(
-        'A client with the same CPF or email already exists',
-      );
-    }
-
-    const { id } = await insertClient(deps.db, {
-      userId: user.id,
-      username: input.username,
-      email: input.email,
-      cpf,
-      phone: input.phone,
-      city: input.city,
-      cep: input.cep,
-      uf: input.uf,
-      street: input.street,
-      region: input.region,
-      complement: input.complement,
-    });
-
-    const row = await findClientById(deps.db, user.id, id);
-    if (!row) {
-      throw new Error('Failed to load newly created client');
-    }
-    return c.json(toResponse(row), 201);
-  });
-
-  clients.patch('/:id', async (c) => {
-    const user = c.get('user');
-    const id = c.req.param('id');
-    const existing = await findClientById(deps.db, user.id, id);
-    if (!existing) {
-      throw AppError.notFound('Client not found');
-    }
-
-    const input = updateClientInputSchema.parse(await c.req.json());
-    const cpf = input.cpf !== undefined ? normalizeCpf(input.cpf) : undefined;
-
-    if (cpf !== undefined || input.email !== undefined) {
-      const duplicate = await findClientByCpfOrEmail(deps.db, {
-        cpf,
-        email: input.email,
-        excludeId: id,
-      });
-      if (duplicate) {
+      // Note: clients.cpf and clients.email are globally unique columns in the
+      // schema (not scoped per user), so duplicate checks here are
+      // intentionally global rather than scoped by userId - scoping them would
+      // let a request pass this check only to fail with a raw 23505 unique
+      // violation from Postgres, which is worse UX than a clean 409 up front.
+      if (await findClientByCpfOrEmail(deps.db, { cpf, email: input.email })) {
         throw AppError.conflict(
           'A client with the same CPF or email already exists',
         );
       }
-    }
 
-    const updates: Record<string, unknown> = {};
-    if (input.username !== undefined) updates.username = input.username;
-    if (input.email !== undefined) updates.email = input.email;
-    if (cpf !== undefined) updates.cpf = cpf;
-    if (input.phone !== undefined) updates.phone = input.phone;
-    if (input.city !== undefined) updates.city = input.city;
-    if (input.cep !== undefined) updates.cep = input.cep;
-    if (input.uf !== undefined) updates.uf = input.uf;
-    if (input.street !== undefined) updates.street = input.street;
-    if (input.region !== undefined) updates.region = input.region;
-    if (input.complement !== undefined) updates.complement = input.complement;
+      const { id } = await insertClient(deps.db, {
+        userId: user.id,
+        username: input.username,
+        email: input.email,
+        cpf,
+        phone: input.phone,
+        city: input.city,
+        cep: input.cep,
+        uf: input.uf,
+        street: input.street,
+        region: input.region,
+        complement: input.complement,
+      });
 
-    await updateClientById(deps.db, user.id, id, updates);
+      const row = await findClientById(deps.db, user.id, id);
+      if (!row) {
+        throw new Error('Failed to load newly created client');
+      }
+      return c.json(toResponse(row), 201);
+    })
 
-    const updated = await findClientById(deps.db, user.id, id);
-    if (!updated) {
-      throw AppError.notFound('Client not found');
-    }
-    return c.json(toResponse(updated), 200);
-  });
+    .patch(
+      '/:id',
+      validateRequest('param', clientIdSchema),
+      validateRequest('json', updateClientInputSchema),
+      async (c) => {
+        const user = c.get('user');
+        const { id } = c.req.valid('param');
+        const existing = await findClientById(deps.db, user.id, id);
+        if (!existing) {
+          throw AppError.notFound('Client not found');
+        }
 
-  clients.delete('/:id', async (c) => {
-    const user = c.get('user');
-    const id = c.req.param('id');
-    const existing = await findClientById(deps.db, user.id, id);
-    if (!existing) {
-      throw AppError.notFound('Client not found');
-    }
-    await deleteClientById(deps.db, user.id, id);
-    return c.body(null, 204);
-  });
+        const input = c.req.valid('json');
+        const cpf =
+          input.cpf !== undefined ? normalizeCpf(input.cpf) : undefined;
 
-  return clients;
+        if (cpf !== undefined || input.email !== undefined) {
+          const duplicate = await findClientByCpfOrEmail(deps.db, {
+            cpf,
+            email: input.email,
+            excludeId: id,
+          });
+          if (duplicate) {
+            throw AppError.conflict(
+              'A client with the same CPF or email already exists',
+            );
+          }
+        }
+
+        const updates: Record<string, unknown> = {};
+        if (input.username !== undefined) updates.username = input.username;
+        if (input.email !== undefined) updates.email = input.email;
+        if (cpf !== undefined) updates.cpf = cpf;
+        if (input.phone !== undefined) updates.phone = input.phone;
+        if (input.city !== undefined) updates.city = input.city;
+        if (input.cep !== undefined) updates.cep = input.cep;
+        if (input.uf !== undefined) updates.uf = input.uf;
+        if (input.street !== undefined) updates.street = input.street;
+        if (input.region !== undefined) updates.region = input.region;
+        if (input.complement !== undefined)
+          updates.complement = input.complement;
+
+        await updateClientById(deps.db, user.id, id, updates);
+
+        const updated = await findClientById(deps.db, user.id, id);
+        if (!updated) {
+          throw AppError.notFound('Client not found');
+        }
+        return c.json(toResponse(updated), 200);
+      },
+    )
+
+    .delete('/:id', validateRequest('param', clientIdSchema), async (c) => {
+      const user = c.get('user');
+      const { id } = c.req.valid('param');
+      const existing = await findClientById(deps.db, user.id, id);
+      if (!existing) {
+        throw AppError.notFound('Client not found');
+      }
+      await deleteClientById(deps.db, user.id, id);
+      return c.body(null, 204);
+    });
+
+  return routes;
 }

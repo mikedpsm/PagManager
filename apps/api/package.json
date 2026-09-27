@@ -5,16 +5,18 @@
   "description": "PagManager HTTP API: Hono + zod-openapi service exposing auth, clients, invoices and dashboard endpoints",
   "type": "module",
   "main": "./dist/server.mjs",
+  "types": "./src/app-type.ts",
   "scripts": {
     "build": "tsdown",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --maxWorkers=2 --hookTimeout=30000"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
     "@hono/zod-openapi": "^1.6.3",
+    "@hono/zod-validator": "^0.9.1",
     "@pagmanager/contracts": "workspace:*",
     "@pagmanager/db": "workspace:*",
     "@scalar/hono-api-reference": "^0.12.6",

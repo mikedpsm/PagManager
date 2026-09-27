@@ -4,7 +4,6 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 
-import { authMiddleware } from './auth/middleware.js';
 import { registerErrorHandler } from './error-handler.js';
 import { createAuthRoutes } from './routes/auth.js';
 import { createClientsRoutes } from './routes/clients.js';
@@ -32,30 +31,26 @@ export function createApp(deps: AppDeps) {
   // through a single, consistent error-response shape.
   registerErrorHandler(app);
 
-  app.route('/health', createHealthRoute(deps));
-
-  // Auth endpoints are intentionally mounted before/outside the
-  // `authMiddleware` scoping below - registering/logging in must be
-  // reachable without a token.
-  app.route('/api/v1/auth', createAuthRoutes(deps));
-
   const v1 = new OpenAPIHono<AppEnv>({
     defaultHook: (result) => {
       if (!result.success) {
         throw result.error;
       }
     },
-  });
+  })
+    .route('/auth', createAuthRoutes(deps))
+    .route('/me', createMeRoutes(deps))
+    .route('/clients', createClientsRoutes(deps))
+    .route('/invoices', createInvoicesRoutes(deps))
+    .route('/dashboard', createDashboardRoutes(deps));
 
-  v1.use('*', authMiddleware(deps));
-  v1.route('/me', createMeRoutes(deps));
-  v1.route('/clients', createClientsRoutes(deps));
-  v1.route('/invoices', createInvoicesRoutes(deps));
-  v1.route('/dashboard', createDashboardRoutes(deps));
+  // Route chaining preserves the schema required by Hono's RPC client.
+  // Auth endpoints remain outside the protected /api/v1 middleware.
+  const routes = app
+    .route('/health', createHealthRoute(deps))
+    .route('/api/v1', v1);
 
-  app.route('/api/v1', v1);
-
-  app.doc31('/openapi.json', {
+  routes.doc31('/openapi.json', {
     openapi: '3.1.0',
     info: {
       title: 'PagManager API',
@@ -63,15 +58,14 @@ export function createApp(deps: AppDeps) {
     },
   });
 
-  app.get(
+  return routes.get(
     '/docs',
     Scalar({
       url: '/openapi.json',
       pageTitle: 'PagManager API',
     }),
   );
-
-  return app;
 }
 
 export type App = ReturnType<typeof createApp>;
+export type AppType = App;

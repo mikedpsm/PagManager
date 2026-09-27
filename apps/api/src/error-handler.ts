@@ -1,4 +1,5 @@
 import type { Context, Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
 
 import { AppError } from './errors.js';
@@ -46,6 +47,10 @@ export function registerErrorHandler(app: Hono<any>): void {
         'Invalid request',
         z.treeifyError(err),
       );
+    }
+
+    if (err instanceof HTTPException && err.status === 400) {
+      return errorResponse(c, 400, 'VALIDATION_ERROR', 'Invalid request');
     }
 
     if (err instanceof SyntaxError) {

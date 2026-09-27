@@ -7,7 +7,16 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["packages/**", "apps/**", "!**/dist", "!**/node_modules"]
+    "includes": [
+      "packages/**",
+      "apps/**",
+      "!**/dist",
+      "!**/node_modules",
+      "!apps/web/src/routeTree.gen.ts"
+    ]
+  },
+  "css": {
+    "parser": { "tailwindDirectives": true }
   },
   "formatter": {
     "enabled": true,
