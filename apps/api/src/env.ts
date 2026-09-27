@@ -11,6 +11,7 @@ export const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(5000),
   DATABASE_URL: z.url().optional(),
   DATA_DIR: z.string().default('./data'),
+  WEB_DIST_DIR: z.string().optional(),
   JWT_SECRET: z.string().optional(),
   CORS_ORIGIN: z.string().optional(),
 });
@@ -22,6 +23,7 @@ export interface AppConfig {
   port: number;
   databaseUrl: string | undefined;
   dataDir: string;
+  webDistDir: string | undefined;
   jwtSecret: string;
   corsOrigin: string | undefined;
 }
@@ -75,6 +77,7 @@ export async function loadEnv(
     port: parsed.PORT,
     databaseUrl: parsed.DATABASE_URL,
     dataDir: parsed.DATA_DIR,
+    webDistDir: parsed.WEB_DIST_DIR,
     jwtSecret,
     corsOrigin: parsed.CORS_ORIGIN,
   };

@@ -40,6 +40,9 @@ build/Release
 # Dependency directories
 node_modules/
 .pnpm-store/
+/playwright-report/
+/test-results/
+/apps/api/.e2e-api-dist-*/
 jspm_packages/
 apps/web/storybook-static/
 

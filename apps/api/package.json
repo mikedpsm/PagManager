@@ -7,7 +7,7 @@
   "main": "./dist/server.mjs",
   "types": "./src/app-type.ts",
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown --config-loader native",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",

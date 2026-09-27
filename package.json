@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "eslint": "^8.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
     "eslint-plugin-import": "^2.20.2",
@@ -27,6 +28,8 @@
   "scripts": {
     "start": "node apps/api/dist/server.mjs",
     "dev": "pnpm --filter @pagmanager/api dev",
+    "build": "pnpm --filter @pagmanager/contracts build && pnpm --filter @pagmanager/db build && pnpm --filter @pagmanager/api build && pnpm --filter @pagmanager/web build",
+    "test:e2e": "node e2e/run.mjs",
     "lint": "npx @biomejs/biome check .",
     "lint:fix": "npx @biomejs/biome check --write .",
     "db:migrate": "pnpm --filter @pagmanager/db migrate",
