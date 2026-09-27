@@ -1,0 +1,47 @@
+# Dependencies and package-manager caches
+node_modules
+**/node_modules
+.pnpm-store
+.npm
+package-lock.json
+**/package-lock.json
+.cache
+**/.cache
+
+# Generated output and local runtime data
+**/dist
+**/build
+apps/web/storybook-static
+coverage
+**/coverage
+.nyc_output
+test-results
+playwright-report
+/data
+/pglite
+
+# Git, CI, and local agent configuration
+.git
+.github
+.gitignore
+.gitattributes
+.agents
+.codex
+.abacusai
+
+# Legacy app and documentation are not needed in the runtime image
+legacy
+**/*.md
+**/*.mdx
+
+# Local secrets and environment files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Logs and reports
+*.log
+debug.log
+report.*.json
+*.lcov

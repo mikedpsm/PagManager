@@ -31,6 +31,8 @@ export function createApp(deps: AppDeps) {
   // through a single, consistent error-response shape.
   registerErrorHandler(app);
 
+  const healthRoute = createHealthRoute(deps);
+
   const v1 = new OpenAPIHono<AppEnv>({
     defaultHook: (result) => {
       if (!result.success) {
@@ -38,6 +40,7 @@ export function createApp(deps: AppDeps) {
       }
     },
   })
+    .route('/health', healthRoute)
     .route('/auth', createAuthRoutes(deps))
     .route('/me', createMeRoutes(deps))
     .route('/clients', createClientsRoutes(deps))
@@ -47,7 +50,7 @@ export function createApp(deps: AppDeps) {
   // Route chaining preserves the schema required by Hono's RPC client.
   // Auth endpoints remain outside the protected /api/v1 middleware.
   const routes = app
-    .route('/health', createHealthRoute(deps))
+    .route('/health', healthRoute)
     .route('/api/v1', v1);
 
   routes.doc31('/openapi.json', {
