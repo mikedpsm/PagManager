@@ -29,5 +29,8 @@ export default defineConfig({
       },
     },
   },
-  build: { outDir: 'dist', emptyOutDir: true },
+  build: {
+    outDir: process.env.WEB_DIST_DIR ?? 'dist',
+    emptyOutDir: true,
+  },
 });

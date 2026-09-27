@@ -149,7 +149,10 @@ async function main(): Promise<void> {
   });
 
   const app = createApp({ db, env });
-  mountStaticAssets(app);
+  mountStaticAssets(
+    app,
+    env.webDistDir ? path.resolve(env.webDistDir) : resolveStaticDir(),
+  );
 
   const server = serve({ fetch: app.fetch, port: env.port }, (info) => {
     console.log(`PagManager API listening on http://localhost:${info.port}`);

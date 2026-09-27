@@ -10,6 +10,8 @@
     "includes": [
       "packages/**",
       "apps/**",
+      "e2e/**",
+      "playwright.config.ts",
       "!**/dist",
       "!**/node_modules",
       "!apps/web/src/routeTree.gen.ts"
