@@ -1,73 +1,137 @@
-# DISCLAIMER: Project removed from Heroku for now. Will be reposted in the near future.
+# PagManager
 
-# SOBRE ESTE PROJETO
+PagManager is a self-hosted billing management app for keeping client records, invoices, and payment status in one place. The dashboard summarizes paid, upcoming, and overdue invoices. The web app and API are served from the same application in production.
 
-Desafio final do curso de Desenvolvimento de Software da Cubos Academy. Trata-se de uma plataforma de cobranças desenvolvido em grupo utilizando a metodologia ágil Scrum. Através de 3 sprints, criamos a plataforma que oferece funcionalidades CRUD para clientes, usuários e cobranças. A API do Back-End foi desenvolvida utilizando o padrão Rest. Nosso Front-end está hospedado na Netlify, já o Back-end, na Heroku. Sua documentação foi feita utilizando Swagger API.
+![PagManager dashboard](docs/pagmanager-dashboard.png)
 
-## Preview
+## Features
 
-![PagManager Print](https://github.com/mikedpsm/PagManager/blob/main/print_pagmanager.png)
+- Manage clients and their invoices.
+- Track paid, upcoming, and overdue charges from the dashboard.
+- Register and manage user profiles.
+- Use the web app, REST API, and interactive API reference from one deployment.
 
-### Tecnologias utilizadas
+## Architecture
 
-##### Back-end
+```mermaid
+flowchart LR
+  Browser -->|web app| API[Hono API and static web app]
+  Browser -->|/docs| API
+  API -->|OpenAPI| Reference[Scalar API reference]
+  API -->|serves built assets| Web[React and TanStack web app]
+  Web -->|/api/v1 requests| API
+  Web[React and TanStack web app] --> Contracts[Shared Zod contracts]
+  API --> Contracts
+  API --> DB[Drizzle database layer]
+  DB -->|local default| PGlite[(PGlite in DATA_DIR)]
+  DB -->|DATABASE_URL| Postgres[(PostgreSQL)]
+```
 
-* Javascript
-* NodeJs
-* PostgreSQL
-* ExpressJs
-* Yup
-* secure-password
-* JWT
-* dotenv
-* Swagger-UI
-* Swagger-autogen
+## Technology stack
 
-##### Front-end
+- **Web:** React 19, TypeScript, Vite, TanStack Router and Query, Tailwind CSS 4, Radix UI, and Storybook.
+- **API:** Hono, TypeScript, Zod OpenAPI, and Scalar.
+- **Data:** Drizzle ORM, PGlite for the local default, or PostgreSQL through `DATABASE_URL`.
+- **Workspace:** pnpm with shared contracts and database packages.
 
-* React
-* React Router Dom
-* Axios
-* Yup
+## Run locally with pnpm
+
+Use Node.js 24 and pnpm 11.24.0. From the repository root:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+pnpm start
+```
+
+Open <http://localhost:5000>. Without `DATABASE_URL`, the API uses PGlite and keeps its data and generated JWT secret under `DATA_DIR` (default `./data`).
+
+For separate development servers, run the API and web app in two terminals:
+
+```sh
+pnpm --filter @pagmanager/api dev
+pnpm --filter @pagmanager/web dev
+```
+
+Vite serves the web app at <http://localhost:5173> and forwards `/api` requests to the API on port 5000. The API reference is at <http://localhost:5000/docs>; its OpenAPI document is at <http://localhost:5000/openapi.json>.
+
+## Run with Docker Compose
+
+Copy `.env.example` to `.env`, replace the example secrets, then start the app and PostgreSQL:
+
+```sh
+cp .env.example .env
+docker compose up --build -d
+docker compose logs -f app
+```
+
+On PowerShell, use `Copy-Item .env.example .env` for the first command. The app is available at <http://localhost:8080> (or the `APP_PORT` configured in `.env`). Compose stores PostgreSQL and application data in named volumes. The API reference is at <http://localhost:8080/docs>.
+
+To run only PostgreSQL in a local development environment, start the database service from `compose.dev.yaml`:
+
+```sh
+docker compose -f compose.dev.yaml up -d postgres
+```
+
+Set `DATABASE_URL` to the local PostgreSQL connection string before starting the API. To use the published image instead of building from source, set `PAGMANAGER_IMAGE=ghcr.io/mikedpsm/pagmanager:latest` in `.env`, then run `docker compose pull app` and `docker compose up -d --no-build`.
+
+## Configuration
+
+The application accepts these variables:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `NODE_ENV` | Runtime mode: `development`, `test`, or `production`. | `development` |
+| `PORT` | API port. | `5000` |
+| `DATABASE_URL` | PostgreSQL connection string. Leave unset to use PGlite. | unset |
+| `DATA_DIR` | Persistent PGlite data and generated JWT secret location. | `./data` |
+| `JWT_SECRET` | Secret used to sign authentication tokens. Required in production with PostgreSQL. | generated and persisted if unset |
+| `CORS_ORIGIN` | Allowed browser origin. | `*` |
+| `WEB_DIST_DIR` | Optional path to the built web app. | resolved automatically |
+| `VITE_API_URL` | Optional API origin when the web app is hosted separately. | same origin |
+
+Compose also reads `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `APP_PORT`, and `PAGMANAGER_IMAGE`. `compose.dev.yaml` also accepts `POSTGRES_PORT`. Keep `.env` private and replace all example secrets before deployment.
+
+## Authors
+
+- **Maicon Douglas Paiva da Silva** — [LinkedIn](https://www.linkedin.com/in/mikedpsm/)
+- **Jonatas Ximenez** — [LinkedIn](https://www.linkedin.com/in/devindio/)
+
+The root package metadata retains the ISC license recorded in the repository's initial public commit.
+
+## Português (Brasil)
+
+PagManager é uma aplicação auto-hospedada para organizar clientes, cobranças e pagamentos. O painel resume cobranças pagas, a vencer e em atraso. Em produção, a aplicação web e a API são servidas pelo mesmo serviço.
+
+### Executar com pnpm
+
+Use Node.js 24 e pnpm 11.24.0. Na raiz do repositório:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+pnpm start
+```
+
+Acesse <http://localhost:5000>. Sem `DATABASE_URL`, a API usa PGlite e mantém os dados e o segredo JWT gerado no diretório `DATA_DIR` (por padrão, `./data`). Para desenvolver separadamente, execute `pnpm --filter @pagmanager/api dev` e `pnpm --filter @pagmanager/web dev` em terminais diferentes. O Vite usa a porta 5173 e encaminha as chamadas `/api` para a API na porta 5000.
+
+### Executar com Docker Compose
+
+Copie `.env.example` para `.env`, troque as senhas de exemplo e inicie a aplicação com PostgreSQL:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build -d
+docker compose logs -f app
+```
+
+Acesse <http://localhost:8080> ou a porta definida em `APP_PORT`. O Compose mantém o banco e os dados da aplicação em volumes nomeados. Para iniciar somente o PostgreSQL durante o desenvolvimento, use `docker compose -f compose.dev.yaml up -d postgres` e configure `DATABASE_URL` antes de iniciar a API.
+
+### API e configuração
+
+A documentação interativa da API fica em `/docs`; o documento OpenAPI fica em `/openapi.json`. A tabela de variáveis na seção [Configuration](#configuration) descreve `NODE_ENV`, `PORT`, `DATABASE_URL`, `DATA_DIR`, `JWT_SECRET`, `CORS_ORIGIN`, `WEB_DIST_DIR` e `VITE_API_URL`. O Compose também aceita `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `APP_PORT` e `PAGMANAGER_IMAGE`. Não publique o arquivo `.env` nem use os segredos de exemplo em produção.
 
 ### Autores
 
-  #### Back-end
-
-   Maicon Douglas Paiva da Silva
-
-   [LinkedIn](https://www.linkedin.com/in/mikedpsm/)
-
-   E-mail:
-    maicondpsm@gmail.com
-
-  #### Front-end
-
-   Jonatas Ximenez
-
-   [LinkedIn](https://www.linkedin.com/in/devindio/)
-
-   E-mail:
-    ximenezjonatas@gmail.com
-
-![](https://i.imgur.com/xG74tOh.png)
-
-# Desafio Final Módulo 5 - BACKEND
-
-Este repositório deverá servir de base para ser realizado o fork para desenvolvimento da parte de **BACKEND** do desafio.
-
-A URL deste repositório deverá ser entregue na plataforma de alunos da Cubos Academy na página da parte de BACKEND do desafio.
-
-A versão final do código de cada sprint deverá estar na branch principal do repositório e sim, a cada semana acumulará as alterações das sprints, portanto a segunda sobrescrevendo a primeira e assim por diante.
-
----
-
-**Repositório de Backend**: https://github.com/mikedpsm/Desafio-Cubos-Back-End-Modulo-05
-
-**Repositório de Frontend**: https://github.com/IndioBR
-
-**URL da aplicação funcionando**: https://pagmanager.netlify.app/
-
----
-
-![](https://img.shields.io/github/license/mikedpsm/Desafio-Cubos-Back-End-Modulo-05)
+- **Maicon Douglas Paiva da Silva** — [LinkedIn](https://www.linkedin.com/in/mikedpsm/)
+- **Jonatas Ximenez** — [LinkedIn](https://www.linkedin.com/in/devindio/)

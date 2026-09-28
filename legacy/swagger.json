@@ -3,7 +3,7 @@
   "info": {
     "version": "1.0.0",
     "title": "PagManager API",
-    "description": "API para controle de sistema de cobranças web. Projeto desenvolvido para desafio final do curso de Desenvolvimento de Software da Cubos Academy."
+    "description": "Legacy PagManager API for managing clients and invoices."
   },
   "host": "localhost:5000",
   "basePath": "/api",
