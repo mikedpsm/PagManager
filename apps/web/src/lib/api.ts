@@ -101,6 +101,8 @@ export const api = {
     readJson<Client>(
       client.api.v1.clients[':id'].$patch({ param: { id }, json: input }),
     ),
+  deleteClient: (id: string) =>
+    readJson<void>(client.api.v1.clients[':id'].$delete({ param: { id } })),
   invoices: (query: InvoiceListQuery = {}) =>
     readJson<Invoice[]>(
       client.api.v1.invoices.$get({

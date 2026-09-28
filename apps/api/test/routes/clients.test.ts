@@ -188,10 +188,23 @@ describe('clients routes', () => {
     });
     const created = await create.json();
 
+    await db.client.insert(invoices).values({
+      clientId: created.id,
+      description: 'Invoice to cascade',
+      amountCents: 2500,
+      dueDate: '2030-01-01',
+    });
+
     const del = await asA()(`/api/v1/clients/${created.id}`, {
       method: 'DELETE',
     });
     expect(del.status).toBe(204);
+
+    const remainingInvoices = await db.client
+      .select()
+      .from(invoices)
+      .where(eq(invoices.clientId, created.id));
+    expect(remainingInvoices).toHaveLength(0);
 
     const getRes = await asA()(`/api/v1/clients/${created.id}`);
     expect(getRes.status).toBe(404);

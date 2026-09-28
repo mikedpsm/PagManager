@@ -71,6 +71,10 @@ export function useUpdateClient() {
   });
 }
 
+export function useDeleteClient() {
+  return useMutation({ mutationFn: api.deleteClient });
+}
+
 export function useCreateInvoice() {
   const refresh = useRefreshBusinessData();
   return useMutation({ mutationFn: api.createInvoice, onSuccess: refresh });

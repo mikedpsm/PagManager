@@ -163,11 +163,16 @@ test('deleting a client removes its invoices from the authenticated API', async 
   );
   expect(createdInvoice).toBeDefined();
 
-  const deleteResponse = await request.delete(
-    `/api/v1/clients/${createdClient?.id}`,
-    { headers },
-  );
-  expect(deleteResponse.status()).toBe(204);
+  await page.goto('/clients');
+  await page
+    .getByRole('link', { name: new RegExp(createdClient?.username ?? '') })
+    .click();
+  await page.getByRole('button', { name: 'Excluir cliente' }).click();
+  const confirmation = page.getByRole('dialog');
+  await expect(confirmation).toContainText('todas as cobranças vinculadas');
+  await confirmation.getByRole('button', { name: 'Excluir cliente' }).click();
+  await expect(page).toHaveURL(/\/clients$/);
+  await expect(page.getByText(createdClient?.username ?? '')).toBeHidden();
 
   const remainingResponse = await request.get('/api/v1/invoices', {
     headers,

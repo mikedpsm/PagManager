@@ -3,8 +3,9 @@ import type {
   CreateInvoiceInput,
   Invoice,
 } from '@pagmanager/contracts';
-import { Link, useParams } from '@tanstack/react-router';
-import { ArrowLeft, MapPin, Pencil, Plus } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { ArrowLeft, MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -20,8 +21,10 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+  queryKeys,
   useClient,
   useCreateInvoice,
+  useDeleteClient,
   useDeleteInvoice,
   useInvoices,
   usePayInvoice,
@@ -39,14 +42,18 @@ export function ClientDetailPage() {
   const invoiceQuery = useInvoices({ clientId });
   const [editOpen, setEditOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice>();
   const [deletingInvoice, setDeletingInvoice] = useState<Invoice>();
   const updateClient = useUpdateClient();
+  const deleteClient = useDeleteClient();
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
   const payInvoice = usePayInvoice();
   const deleteInvoice = useDeleteInvoice();
   const client = clientQuery.data;
+  const navigate = useNavigate({ from: '/clients/$clientId' });
+  const queryClient = useQueryClient();
   const clientsById = new Map(client ? [[client.id, client.username]] : []);
 
   async function saveClient(values: CreateClientInput) {
@@ -87,7 +94,34 @@ export function ClientDetailPage() {
     }
   }
 
-  async function confirmDelete() {
+  async function confirmDeleteClient() {
+    if (!client) return;
+    try {
+      await deleteClient.mutateAsync(client.id);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível excluir o cliente.',
+      );
+      return;
+    }
+
+    setDeleteOpen(false);
+    toast.success('Cliente e cobranças excluídos.');
+    await navigate({ to: '/clients' });
+    queryClient.removeQueries({
+      queryKey: queryKeys.client(client.id),
+      exact: true,
+    });
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.clients }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices }),
+    ]);
+  }
+
+  async function confirmDeleteInvoice() {
     if (!deletingInvoice) return;
     try {
       await deleteInvoice.mutateAsync(deletingInvoice.id);
@@ -173,7 +207,7 @@ export function ClientDetailPage() {
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <Button variant="outline" onClick={() => setEditOpen(true)}>
                 <Pencil className="size-4" />
@@ -195,6 +229,10 @@ export function ClientDetailPage() {
               <Button onClick={() => setInvoiceOpen(true)}>
                 <Plus className="size-4" />
                 Nova cobrança
+              </Button>
+              <Button variant="danger" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="size-4" aria-hidden="true" />
+                Excluir cliente
               </Button>
               <InvoiceDialog
                 clients={[client]}
@@ -263,6 +301,38 @@ export function ClientDetailPage() {
         )}
       </Card>
       <Dialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          if (!deleteClient.isPending) setDeleteOpen(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir cliente?</DialogTitle>
+            <DialogDescription>
+              O cliente “{client.username}” e todas as cobranças vinculadas
+              serão excluídos permanentemente. Essa ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleteClient.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => void confirmDeleteClient()}
+              disabled={deleteClient.isPending}
+            >
+              {deleteClient.isPending ? 'Excluindo…' : 'Excluir cliente'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
         open={Boolean(deletingInvoice)}
         onOpenChange={(open) => {
           if (!open) setDeletingInvoice(undefined);
@@ -284,7 +354,7 @@ export function ClientDetailPage() {
             </Button>
             <Button
               variant="danger"
-              onClick={() => void confirmDelete()}
+              onClick={() => void confirmDeleteInvoice()}
               disabled={deleteInvoice.isPending}
             >
               {deleteInvoice.isPending ? 'Excluindo…' : 'Excluir cobrança'}
