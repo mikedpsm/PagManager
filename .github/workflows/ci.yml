@@ -289,6 +289,10 @@ jobs:
       - name: Verify UI, API health, and data persistence
         run: bash scripts/container-smoke.sh pagmanager:ci
 
+      - name: Remove local Docker image
+        if: always()
+        run: docker image rm pagmanager:ci >/dev/null 2>&1 || true
+
   ci-status:
     name: All Checks Passed
     runs-on: ubuntu-latest

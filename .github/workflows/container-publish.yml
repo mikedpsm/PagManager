@@ -89,3 +89,14 @@ jobs:
           image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/pagmanager@${IMAGE_DIGEST}"
           docker pull "$image"
           bash scripts/container-smoke.sh "$image"
+
+      - name: Remove local Docker images
+        if: always()
+        env:
+          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          docker image rm pagmanager:release-check >/dev/null 2>&1 || true
+          if [ -n "${IMAGE_DIGEST:-}" ]; then
+            image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/pagmanager@${IMAGE_DIGEST}"
+            docker image rm "$image" >/dev/null 2>&1 || true
+          fi
