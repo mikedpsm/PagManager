@@ -8,8 +8,9 @@ ENV COREPACK_HOME=/corepack \
 
 WORKDIR /app
 
+COPY package.json ./
 RUN corepack enable \
-    && corepack prepare pnpm@11.24.0 --activate
+    && corepack install
 
 # Fetch from the lockfile before copying source so dependency layers can be cached.
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
