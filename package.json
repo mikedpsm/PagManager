@@ -24,7 +24,7 @@
   "description": "PagManager is a self-hosted billing management web app for clients, invoices, and payment tracking.",
   "version": "2.0.0",
   "private": true,
-  "packageManager": "pnpm@11.24.0",
+  "packageManager": "pnpm@10.34.6",
   "main": "index.js",
   "scripts": {
     "start": "node apps/api/dist/server.mjs",

@@ -36,7 +36,7 @@ flowchart LR
 
 ## Run locally with pnpm
 
-Use Node.js 24 and pnpm 11.24.0. From the repository root:
+Use Node.js 24 (pinned in `.nvmrc`) and pnpm 10.34.6 (pinned in `package.json`). Run `nvm use` if you use nvm, then `corepack enable` to activate the pinned package manager. From the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -116,7 +116,7 @@ PagManager é uma aplicação auto-hospedada para organizar clientes, cobranças
 
 ### Executar com pnpm
 
-Use Node.js 24 e pnpm 11.24.0. Na raiz do repositório:
+Use Node.js 24 (fixado em `.nvmrc`) e pnpm 10.34.6 (fixado em `package.json`). Execute `nvm use` se você usa nvm e depois `corepack enable` para ativar o gerenciador de pacotes fixado. Na raiz do repositório:
 
 ```sh
 pnpm install --frozen-lockfile
