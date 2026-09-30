@@ -92,6 +92,17 @@ The application accepts these variables:
 
 Compose also reads `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `APP_PORT`, and `PAGMANAGER_IMAGE`. `compose.dev.yaml` also accepts `POSTGRES_PORT`. Keep `.env` private and replace all example secrets before deployment.
 
+## Modernization references
+
+The [`legacy-v1` tag](https://github.com/mikedpsm/PagManager/tree/legacy-v1) preserves the original v1 backend at commit `a401d3f`, immediately before the first modernization merge. The [`modernize` branch](https://github.com/mikedpsm/PagManager/tree/modernize) was created from `main` at commit `ad55b96` when [task T0.1 (#11)](https://github.com/mikedpsm/PagManager/issues/11) was completed.
+
+To inspect the original package metadata from a local checkout:
+
+```sh
+git fetch origin tag legacy-v1
+git show legacy-v1:package.json
+```
+
 ## Authors
 
 - **Maicon Douglas Paiva da Silva** — [LinkedIn](https://www.linkedin.com/in/mikedpsm/)
@@ -130,6 +141,10 @@ Acesse <http://localhost:8080> ou a porta definida em `APP_PORT`. O Compose mant
 ### API e configuração
 
 A documentação interativa da API fica em `/docs`; o documento OpenAPI fica em `/openapi.json`. A tabela de variáveis na seção [Configuration](#configuration) descreve `NODE_ENV`, `PORT`, `DATABASE_URL`, `DATA_DIR`, `JWT_SECRET`, `CORS_ORIGIN`, `WEB_DIST_DIR` e `VITE_API_URL`. O Compose também aceita `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `APP_PORT` e `PAGMANAGER_IMAGE`. Não publique o arquivo `.env` nem use os segredos de exemplo em produção.
+
+### Referências da modernização
+
+A tag [`legacy-v1`](https://github.com/mikedpsm/PagManager/tree/legacy-v1) preserva o backend original v1 no commit `a401d3f`, anterior ao primeiro merge de modernização. A branch [`modernize`](https://github.com/mikedpsm/PagManager/tree/modernize) foi criada a partir de `main` no commit `ad55b96` ao concluir a [tarefa T0.1 (#11)](https://github.com/mikedpsm/PagManager/issues/11). Os comandos da seção [Modernization references](#modernization-references) permitem consultar os metadados originais em um checkout local.
 
 ### Autores
 
