@@ -2,6 +2,8 @@ import type { RegisterStep1, RegisterStep2 } from '@pagmanager/contracts';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { BrandLogo } from '@/components/brand/brand-logo';
+
 import { Card } from '@/components/ui/card';
 import { ThemeSelector } from '@/features/theme/theme-selector';
 import { api } from '@/lib/api';
@@ -73,14 +75,8 @@ export function RegisterPage() {
         <div className="mb-6 flex justify-end">
           <ThemeSelector />
         </div>
-        <Link
-          to="/login"
-          className="mb-8 inline-flex items-center gap-2 text-base font-bold text-brand-strong"
-        >
-          <span className="grid size-8 place-items-center rounded-lg bg-brand text-white">
-            P
-          </span>
-          PagManager
+        <Link to="/login" className="mb-8 inline-flex">
+          <BrandLogo />
         </Link>
         {step === 1 && (
           <>
