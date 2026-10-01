@@ -331,6 +331,38 @@ describe('OpenAPI document', () => {
     expect(new Set(operationIds).size).toBe(operationIds.length);
   });
 
+  it('documents bounded request bodies, auth rate limits, and generic health failures', () => {
+    for (const [method, path] of expectedOperations) {
+      const operation = operationFor(document, method, path);
+      if (operation.requestBody) {
+        expect(
+          operation.responses['413'],
+          `${method.toUpperCase()} ${path}`,
+        ).toBeDefined();
+      }
+    }
+
+    for (const path of [
+      '/api/v1/auth/register',
+      '/api/v1/auth/login',
+      '/api/v1/auth/check-email',
+    ]) {
+      expect(
+        operationFor(document, 'post', path).responses['429'],
+      ).toBeDefined();
+    }
+
+    for (const path of ['/health', '/api/v1/health']) {
+      const failure = responseSchema(
+        document,
+        operationFor(document, 'get', path),
+        503,
+      );
+      expect(failure?.properties).toHaveProperty('status');
+      expect(failure?.properties).not.toHaveProperty('message');
+    }
+  });
+
   it('declares JWT bearer authentication only on protected operations', () => {
     expect(document.components.securitySchemes?.BearerAuth).toMatchObject({
       type: 'http',

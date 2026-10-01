@@ -67,6 +67,9 @@ test('registers, logs in, edits the profile, and logs out', async ({
   await expect(profile.getByLabel('Telefone')).toHaveValue('(11) 98888-7777');
   await profile.getByLabel('Nova senha', { exact: true }).fill(updatedPassword);
   await profile
+    .getByLabel('Senha atual', { exact: true })
+    .fill(account.password);
+  await profile
     .getByLabel('Confirmar senha', { exact: true })
     .fill(updatedPassword);
   await profile.getByRole('button', { name: 'Salvar perfil' }).click();
@@ -244,7 +247,20 @@ test('searches and filters clients, edits client details, and filters, edits and
   await dialog.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(dialog.getByText('Informe um CEP com 8 dígitos.')).toBeVisible();
   await expect(dialog).toBeVisible();
+  await page.route('https://viacep.com.br/ws/01001000/json/', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        logradouro: 'Praça da Sé',
+        bairro: 'Sé',
+        localidade: 'São Paulo',
+        uf: 'SP',
+      }),
+    }),
+  );
   await dialog.getByLabel('CEP').fill('01001000');
+  await dialog.getByRole('button', { name: 'Buscar endereço' }).click();
+  await expect(dialog.getByLabel('Cidade')).toHaveValue('São Paulo');
   await expect(dialog.getByLabel('Telefone')).toHaveValue('(11) 3333-4444');
   await expect(dialog.getByLabel('CEP')).toHaveValue('01001-000');
   await dialog.getByRole('button', { name: 'Salvar alterações' }).click();

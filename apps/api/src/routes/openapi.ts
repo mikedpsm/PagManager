@@ -1,6 +1,8 @@
 import { errorResponseSchema } from '@pagmanager/contracts';
 import type { ZodType } from 'zod';
 
+import { MAX_REQUEST_BODY_DISPLAY } from '../request-limits.js';
+
 export function jsonResponse<Schema extends ZodType>(
   schema: Schema,
   description: string,
@@ -15,6 +17,10 @@ export function jsonResponse<Schema extends ZodType>(
 
 export const validationErrorResponse = {
   400: jsonResponse(errorResponseSchema, 'Invalid request.'),
+  413: jsonResponse(
+    errorResponseSchema,
+    `Request bodies may not exceed ${MAX_REQUEST_BODY_DISPLAY}.`,
+  ),
 };
 
 export const unauthorizedErrorResponse = {

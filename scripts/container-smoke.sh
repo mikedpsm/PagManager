@@ -18,6 +18,7 @@ docker volume create "$volume_name" >/dev/null
 docker run --detach \
   --name "$container_name" \
   --publish "127.0.0.1:${host_port}:8080" \
+  --env "CORS_ORIGIN=${base_url}" \
   --volume "${volume_name}:/data" \
   "$image_ref" >/dev/null
 

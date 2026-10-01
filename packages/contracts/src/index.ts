@@ -4,6 +4,7 @@ export * from './client.js';
 export * from './cpf.js';
 export * from './dashboard.js';
 export * from './errors.js';
+export * from './field-limits.js';
 export * from './i18n.js';
 export * from './invoice.js';
 export * from './money.js';

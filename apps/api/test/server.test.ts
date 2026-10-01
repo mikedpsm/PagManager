@@ -100,16 +100,23 @@ describe('server module', () => {
 
     it('still closes the db and exits 1 if server.close reports an error', async () => {
       const exit = vi.fn();
-      const dbClose = vi.fn().mockResolvedValue(undefined);
+      const dbClose = vi
+        .fn()
+        .mockRejectedValue(
+          new Error('postgres://user:db-secret@database.internal/paymanager'),
+        );
       const serverClose = vi.fn((cb: (err?: Error) => void) =>
-        cb(new Error('boom')),
+        cb(new Error('server closed with db-secret')),
       );
+      const errorLog = vi.fn();
 
       const shutdown = createShutdownHandler({
         server: { close: serverClose },
         db: { close: dbClose },
         exit,
         log: vi.fn(),
+        errorLog,
+        nodeEnv: 'production',
       });
 
       shutdown('SIGINT');
@@ -117,6 +124,12 @@ describe('server module', () => {
 
       expect(dbClose).toHaveBeenCalledTimes(1);
       expect(exit).toHaveBeenCalledWith(1);
+      expect(errorLog).toHaveBeenCalledTimes(2);
+      const logged = errorLog.mock.calls.flat().join(' ');
+      expect(logged).toContain('shutdown_http_failed');
+      expect(logged).toContain('shutdown_database_failed');
+      expect(logged).not.toContain('db-secret');
+      expect(logged).not.toContain('database.internal');
     });
 
     it('force-exits 1 if server.close never calls back before the hard timeout', () => {

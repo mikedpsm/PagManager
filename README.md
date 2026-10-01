@@ -2,7 +2,7 @@
 
 PagManager is an independent, self-hosted billing management product that brings clients, invoices, and payment tracking into one workspace. It helps you organize billing and see what has been paid, what is coming due, and what is overdue.
 
-Deploy it on your own infrastructure with persistent local storage or PostgreSQL. The web app, REST API, and interactive API reference run together in a single deployment.
+Deploy it on your own infrastructure with persistent local storage or PostgreSQL. The web app and REST API run together in a single deployment. An interactive API reference is available in development and test environments.
 
 ![PagManager dashboard](docs/pagmanager-dashboard.png)
 
@@ -13,7 +13,7 @@ Deploy it on your own infrastructure with persistent local storage or PostgreSQL
 - **Billing overview:** monitor paid, upcoming, and overdue invoices from the dashboard.
 - **User accounts:** register, sign in, and manage your profile.
 - **Self-hosting:** run with PGlite or PostgreSQL using pnpm or Docker Compose.
-- **API access:** use the REST API and its interactive reference alongside the web app.
+- **API access:** use the REST API alongside the web app and its interactive reference during development.
 
 ## Architecture
 
@@ -80,7 +80,7 @@ pnpm test:e2e
 
 ## Run with Docker Compose
 
-Copy `.env.example` to `.env`, replace the example secrets, then start the app and PostgreSQL:
+Copy `.env.example` to `.env`, replace the example secrets, and set `CORS_ORIGIN` to the exact browser origin (for example `http://localhost:8080` locally or `https://pagmanager.example.com` on your server). Then start the app and PostgreSQL:
 
 ```sh
 cp .env.example .env
@@ -88,7 +88,7 @@ docker compose up --build -d
 docker compose logs -f app
 ```
 
-On PowerShell, use `Copy-Item .env.example .env` for the first command. The app is available at <http://localhost:8080> (or the `APP_PORT` configured in `.env`). Compose stores PostgreSQL and application data in named volumes. The API reference is at <http://localhost:8080/docs>.
+On PowerShell, use `Copy-Item .env.example .env` for the first command. The app is available at <http://localhost:8080> (or the `APP_PORT` configured in `.env`). Compose stores PostgreSQL and application data in named volumes. `/docs` and `/openapi.json` return 404 in production.
 
 To run only PostgreSQL in a local development environment, start the database service from `compose.dev.yaml`:
 
@@ -108,12 +108,22 @@ The application accepts these variables:
 | `PORT` | API port. | `5000` |
 | `DATABASE_URL` | PostgreSQL connection string. Leave unset to use PGlite. | unset |
 | `DATA_DIR` | Persistent PGlite data and generated JWT secret location. | `./data` |
-| `JWT_SECRET` | Secret used to sign authentication tokens. Required in production with PostgreSQL. | generated and persisted if unset |
-| `CORS_ORIGIN` | Allowed browser origin. | `*` |
+| `JWT_SECRET` | Secret used to sign authentication tokens. Production validates the resolved secret and requires an explicit value with PostgreSQL. | generated and persisted if unset with PGlite |
+| `CORS_ORIGIN` | Exact allowed HTTP(S) browser origin. Required in production; wildcard is rejected. | `*` in development/test |
 | `WEB_DIST_DIR` | Optional path to the built web app. | resolved automatically |
 | `VITE_API_URL` | Optional API origin when the web app is hosted separately. | same origin |
 
 Compose also reads `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `APP_PORT`, and `PAGMANAGER_IMAGE`. `compose.dev.yaml` also accepts `POSTGRES_PORT`. Keep `.env` private and replace all example secrets before deployment.
+
+## Security configuration
+
+Generate `JWT_SECRET` from at least 32 cryptographically random bytes, for example with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Production rejects short secrets, common placeholders and obvious repeated patterns. These checks cannot prove that a secret was randomly generated. Existing PGlite secrets are validated too; back up the data directory before changing its `jwt-secret` file. Rotating the secret invalidates existing tokens and requires users to sign in again.
+
+New access tokens expire after one hour. The browser still stores them in `localStorage`, so JavaScript running on the same origin can access them. The shorter lifetime limits the exposure window; moving sessions to HttpOnly cookies remains a separate authentication change. Tokens issued before this change keep their original expiry unless the signing secret is rotated. Expired sessions are cleared when an API request returns 401. Changing a password requires the current password; changing other profile fields does not.
+
+HTTP request bodies are limited to 100 KiB. Input names are limited to 100 characters, invoice descriptions to 500 characters, and client searches to 100 characters. Existing records remain readable. The server also sets a Content-Security-Policy on the served frontend, omits database details from public health failures and sanitizes production error logs.
+
+Public authentication endpoints limit each connection IP to 10 login attempts per 15 minutes, 5 registrations per hour and 20 email availability checks per 15 minutes. A blocked request returns 429 with `Retry-After`. Each endpoint tracks at most 10,000 addresses per server process; if that capacity is reached, new addresses must wait for a window to expire. Client-supplied forwarding headers are not trusted. Behind a reverse proxy, clients may share the proxy's address, so also configure client-aware limits at that trusted proxy. With multiple replicas, use a shared limiter at the gateway to enforce an aggregate limit.
 
 ## Authors
 

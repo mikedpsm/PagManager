@@ -28,7 +28,7 @@ services:
       DATA_DIR: /data
       DATABASE_URL: "postgres://${POSTGRES_USER:-pagmanager}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-pagmanager}"
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
-      CORS_ORIGIN: "${CORS_ORIGIN:-*}"
+      CORS_ORIGIN: "${CORS_ORIGIN:?Set CORS_ORIGIN in .env}"
     ports:
       - "${APP_PORT:-8080}:8080"
     volumes:

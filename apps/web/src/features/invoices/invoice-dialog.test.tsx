@@ -1,4 +1,7 @@
-import type { Client } from '@pagmanager/contracts';
+import {
+  type Client,
+  MAX_INVOICE_DESCRIPTION_LENGTH,
+} from '@pagmanager/contracts';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -31,7 +34,12 @@ describe('InvoiceDialog', () => {
       </Dialog>,
     );
 
-    await user.type(screen.getByLabelText('Descrição'), 'Serviços');
+    const description = screen.getByLabelText('Descrição');
+    expect(description).toHaveProperty(
+      'maxLength',
+      MAX_INVOICE_DESCRIPTION_LENGTH,
+    );
+    await user.type(description, 'Serviços');
     fireEvent.change(screen.getByLabelText('Valor (R$)'), {
       target: { value: '21.474.836,48' },
     });

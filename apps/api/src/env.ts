@@ -30,6 +30,104 @@ export interface AppConfig {
 
 const JWT_SECRET_FILE_NAME = 'jwt-secret';
 
+const JWT_SECRET_PLACEHOLDERS = [
+  'change-me',
+  'changeme',
+  'changeit',
+  'replace-with',
+  'replace-me',
+  'replaceme',
+  'placeholder',
+  'your-secret',
+  'yoursecret',
+  'your-jwt',
+  'example-secret',
+  'test-secret',
+  'dev-secret',
+  'default-secret',
+  'password',
+  'supersecret',
+  'letmein',
+  'qwerty',
+];
+
+function isObviousRepeatedPattern(value: string): boolean {
+  const maxPatternLength = Math.min(16, Math.floor(value.length / 2));
+  for (
+    let patternLength = 1;
+    patternLength <= maxPatternLength;
+    patternLength++
+  ) {
+    if (value.length % patternLength !== 0) continue;
+
+    let repeats = true;
+    for (let index = patternLength; index < value.length; index++) {
+      if (value[index] !== value[index % patternLength]) {
+        repeats = false;
+        break;
+      }
+    }
+    if (repeats) return true;
+  }
+  return false;
+}
+
+function validateProductionJwtSecret(secret: string): void {
+  const normalized = secret.toLowerCase();
+  if (
+    Array.from(secret).length < 32 ||
+    new Set(Array.from(secret)).size < 8 ||
+    JWT_SECRET_PLACEHOLDERS.some((placeholder) =>
+      normalized.includes(placeholder),
+    ) ||
+    isObviousRepeatedPattern(secret) ||
+    normalized.includes('1234567890') ||
+    normalized.includes('abcdefghijklmnopqrstuvwxyz')
+  ) {
+    throw new Error(
+      'JWT_SECRET must be at least 32 characters and must not be a placeholder, low-diversity value, or obvious repeated pattern in production.',
+    );
+  }
+}
+
+function productionCorsOrigin(origin: string | undefined): string {
+  if (
+    !origin ||
+    origin.trim() !== origin ||
+    origin.includes('*') ||
+    origin === '*'
+  ) {
+    throw new Error(
+      'CORS_ORIGIN is required in production and must be one explicit HTTP(S) origin.',
+    );
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(origin);
+  } catch {
+    throw new Error(
+      'CORS_ORIGIN is required in production and must be one explicit HTTP(S) origin.',
+    );
+  }
+
+  if (
+    (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') ||
+    parsed.username.length > 0 ||
+    parsed.password.length > 0 ||
+    parsed.hostname.includes('*') ||
+    parsed.pathname !== '/' ||
+    parsed.search.length > 0 ||
+    parsed.hash.length > 0
+  ) {
+    throw new Error(
+      'CORS_ORIGIN is required in production and must be one explicit HTTP(S) origin.',
+    );
+  }
+
+  return parsed.origin;
+}
+
 async function readOrCreateJwtSecretFile(dataDir: string): Promise<string> {
   const secretPath = path.join(dataDir, JWT_SECRET_FILE_NAME);
 
@@ -72,6 +170,19 @@ export async function loadEnv(
     jwtSecret = await readOrCreateJwtSecretFile(parsed.DATA_DIR);
   }
 
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET could not be resolved.');
+  }
+
+  if (parsed.NODE_ENV === 'production') {
+    validateProductionJwtSecret(jwtSecret);
+  }
+
+  const corsOrigin =
+    parsed.NODE_ENV === 'production'
+      ? productionCorsOrigin(parsed.CORS_ORIGIN)
+      : parsed.CORS_ORIGIN;
+
   return {
     nodeEnv: parsed.NODE_ENV,
     port: parsed.PORT,
@@ -79,6 +190,6 @@ export async function loadEnv(
     dataDir: parsed.DATA_DIR,
     webDistDir: parsed.WEB_DIST_DIR,
     jwtSecret,
-    corsOrigin: parsed.CORS_ORIGIN,
+    corsOrigin,
   };
 }

@@ -1,7 +1,7 @@
 import { sign, verify } from 'hono/jwt';
 
 const ALGORITHM = 'HS256';
-const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
+const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 export interface AuthTokenPayload {
   [key: string]: unknown;
@@ -18,7 +18,7 @@ export async function signAuthToken(
   const payload: AuthTokenPayload = {
     sub: userId,
     iat,
-    exp: iat + SEVEN_DAYS_IN_SECONDS,
+    exp: iat + ONE_HOUR_IN_SECONDS,
   };
 
   return sign(payload, secret, ALGORITHM);

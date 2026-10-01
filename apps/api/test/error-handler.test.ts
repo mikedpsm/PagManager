@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import { registerErrorHandler } from '../src/error-handler.js';
 import { AppError } from '../src/errors.js';
 
-function buildApp() {
+function buildApp(nodeEnv: 'development' | 'test' | 'production' = 'test') {
   const app = new Hono();
 
   app.get('/zod', () => {
@@ -29,10 +29,14 @@ function buildApp() {
   });
 
   app.get('/boom', () => {
-    throw new Error('secret internal detail');
+    const error = new Error(
+      'postgres://service:db-secret@database.internal:5432/paymanager',
+      { cause: new Error('SQL included private invoice data') },
+    );
+    throw error;
   });
 
-  registerErrorHandler(app);
+  registerErrorHandler(app, nodeEnv);
   return app;
 }
 
@@ -72,10 +76,34 @@ describe('registerErrorHandler', () => {
 
   it('maps unknown errors to 500 without leaking internals', async () => {
     const app = buildApp();
-    const res = await app.request('/boom');
-    expect(res.status).toBe(500);
-    const body = await res.json();
-    expect(body.code).toBe('INTERNAL_SERVER_ERROR');
-    expect(JSON.stringify(body)).not.toContain('secret internal detail');
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const res = await app.request('/boom');
+      expect(res.status).toBe(500);
+      const body = await res.json();
+      expect(body.code).toBe('INTERNAL_SERVER_ERROR');
+      expect(JSON.stringify(body)).not.toContain('db-secret');
+      expect(errorLog.mock.calls.flat().join(' ')).toContain('db-secret');
+    } finally {
+      errorLog.mockRestore();
+    }
+  });
+
+  it('emits only fixed allowlisted fields for unexpected production errors', async () => {
+    const app = buildApp('production');
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const res = await app.request('/boom');
+      expect(res.status).toBe(500);
+      const logged = errorLog.mock.calls.flat().join(' ');
+      expect(logged).toContain('"event":"request_error"');
+      expect(logged).toContain('"code":"INTERNAL_SERVER_ERROR"');
+      expect(logged).toContain('"message":"Unexpected request error"');
+      expect(logged).not.toContain('db-secret');
+      expect(logged).not.toContain('database.internal');
+      expect(logged).not.toContain('private invoice data');
+    } finally {
+      errorLog.mockRestore();
+    }
   });
 });
