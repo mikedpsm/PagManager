@@ -8,6 +8,7 @@ import ClientsSelectedIcon from '@/assets/icons/clients-selected.svg?react';
 import HomeIcon from '@/assets/icons/home.svg?react';
 import HomeSelectedIcon from '@/assets/icons/home-selected.svg?react';
 import LogoutIcon from '@/assets/icons/logout.svg?react';
+import { BrandLogo } from '@/components/brand/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -46,14 +47,8 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-line bg-white px-4 py-6">
-      <Link
-        to="/home"
-        className="mb-10 flex items-center gap-3 px-2 text-lg font-bold tracking-tight text-brand-dark"
-      >
-        <span className="grid size-9 place-items-center rounded-xl bg-brand text-sm text-white">
-          P
-        </span>
-        PagManager
+      <Link to="/home" className="mb-10 flex items-center px-2">
+        <BrandLogo />
       </Link>
       <nav aria-label="Navegação principal" className="space-y-1">
         {navLinks.map(({ to, label, Icon, ActiveIcon }) => {
