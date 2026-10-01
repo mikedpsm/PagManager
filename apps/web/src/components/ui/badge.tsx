@@ -8,11 +8,11 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-emerald-50 text-brand-dark',
-        paid: 'bg-emerald-50 text-brand-dark',
-        pending: 'bg-amber-50 text-amber-700',
-        overdue: 'bg-rose-50 text-rose-700',
-        neutral: 'bg-slate-100 text-slate-600',
+        default: 'bg-success-soft text-brand-strong',
+        paid: 'bg-success-soft text-brand-strong',
+        pending: 'bg-warning-soft text-warning',
+        overdue: 'bg-danger-soft text-danger',
+        neutral: 'bg-canvas text-muted',
       },
     },
     defaultVariants: { variant: 'default' },

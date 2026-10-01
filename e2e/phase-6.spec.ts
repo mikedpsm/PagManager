@@ -52,6 +52,21 @@ test('registers, logs in, edits the profile, and logs out', async ({
   ).toBeVisible();
   await page.getByRole('button', { name: 'Acessar minha conta' }).click();
   await expect(page).toHaveURL(/\/home$/);
+  const theme = page.getByRole('combobox', { name: 'Tema de aparência' });
+  await theme.selectOption('dark');
+  await page.reload();
+  await expect(theme).toHaveValue('dark');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(theme).toBeVisible();
+  await theme.focus();
+  await expect(theme).toBeFocused();
+  await theme.selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   await logout(page);
   await page.getByLabel('E-mail').fill(account.email);

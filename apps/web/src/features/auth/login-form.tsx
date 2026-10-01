@@ -60,7 +60,7 @@ export function LoginForm({ onSubmit, onRegister }: LoginFormProps) {
         Ainda não tem conta?{' '}
         <button
           type="button"
-          className="font-semibold text-brand hover:underline"
+          className="font-semibold text-brand-text hover:underline"
           onClick={onRegister}
         >
           Criar conta

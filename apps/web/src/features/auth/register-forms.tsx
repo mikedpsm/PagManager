@@ -40,7 +40,7 @@ function Progress({ step }: { step: number }) {
               />
             )}
             <span
-              className={`relative z-10 grid size-10 place-items-center rounded-full border ${step >= current ? 'border-brand bg-brand text-white' : 'border-line bg-white text-muted'}`}
+              className={`relative z-10 grid size-10 place-items-center rounded-full border ${step >= current ? 'border-brand bg-brand text-white' : 'border-line bg-surface text-muted'}`}
             >
               {step > current ? (
                 <Check className="size-4" aria-hidden="true" />
@@ -49,7 +49,7 @@ function Progress({ step }: { step: number }) {
               )}
             </span>
             <span
-              className={`text-xs font-medium ${step >= current ? 'text-brand-dark' : 'text-muted'}`}
+              className={`text-xs font-medium ${step >= current ? 'text-brand-strong' : 'text-muted'}`}
             >
               {label}
             </span>
@@ -180,7 +180,7 @@ export function RegisterComplete({ onContinue }: { onContinue(): void }) {
   return (
     <div className="text-center">
       <Progress step={3} />
-      <div className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-emerald-50 text-brand">
+      <div className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-success-soft text-brand-text">
         <Check className="size-8" aria-hidden="true" />
       </div>
       <h2 className="text-2xl font-bold text-ink">Conta criada!</h2>

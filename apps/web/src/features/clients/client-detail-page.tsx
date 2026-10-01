@@ -148,12 +148,12 @@ export function ClientDetailPage() {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-danger">
             {clientQuery.error.message}
           </p>
           <Link
             to="/clients"
-            className="mt-4 inline-block text-sm font-semibold text-brand"
+            className="mt-4 inline-block text-sm font-semibold text-brand-text"
           >
             Voltar para clientes
           </Link>
@@ -166,7 +166,7 @@ export function ClientDetailPage() {
     <div className="space-y-6">
       <Link
         to="/clients"
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted hover:text-brand"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted hover:text-brand-text"
       >
         <ArrowLeft className="size-4" />
         Voltar para clientes
@@ -174,7 +174,7 @@ export function ClientDetailPage() {
       <Card>
         <CardContent className="flex flex-col justify-between gap-5 p-5 sm:flex-row sm:items-start sm:p-7">
           <div className="flex gap-4">
-            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-lg font-bold text-brand-dark">
+            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-success-soft text-lg font-bold text-brand-strong">
               {client.username
                 .split(/\s+/)
                 .map((part) => part[0])
@@ -272,7 +272,7 @@ export function ClientDetailPage() {
           </CardContent>
         ) : invoiceQuery.isError ? (
           <CardContent>
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-danger">
               {invoiceQuery.error.message}
             </p>
           </CardContent>

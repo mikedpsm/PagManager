@@ -12,7 +12,7 @@
   --color-surface: #ffffff;
   --color-canvas: #f5f7f5;
   --color-danger: #ae1100;
-  --color-warning: #cc7800;
+  --color-warning: #945400;
 }
 
 :root {
@@ -47,4 +47,54 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid #82d5aa;
   outline-offset: 2px;
+}
+
+@theme inline {
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-text: var(--brand-text);
+  --color-success-soft: var(--success-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger-soft: var(--danger-soft);
+}
+
+:root {
+  color-scheme: light;
+  --brand-strong: #034a2a;
+  --brand-text: #087443;
+  --success-soft: #eaf8f0;
+  --warning-soft: #fff8e7;
+  --danger-soft: #fff0f2;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #e5eee9;
+  --color-muted: #a8b9b0;
+  --color-line: #3b5047;
+  --color-surface: #1b2a24;
+  --color-canvas: #111b18;
+  --color-danger: #ff9e94;
+  --color-warning: #f3c16d;
+  --brand-strong: #8ce0b4;
+  --brand-text: #7bdbab;
+  --success-soft: #203e2e;
+  --warning-soft: #41331c;
+  --danger-soft: #432a2d;
+}
+
+:root[data-theme="dark"] [data-sonner-toast] {
+  --normal-bg: var(--color-surface);
+  --normal-text: var(--color-ink);
+  --normal-border: var(--color-line);
+  --success-bg: var(--success-soft);
+  --success-text: var(--brand-strong);
+  --success-border: var(--color-line);
+  --error-bg: var(--danger-soft);
+  --error-text: var(--color-danger);
+  --error-border: var(--color-line);
+  --warning-bg: var(--warning-soft);
+  --warning-text: var(--color-warning);
+  --warning-border: var(--color-line);
 }

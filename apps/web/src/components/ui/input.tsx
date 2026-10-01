@@ -8,7 +8,7 @@ export const Input = forwardRef<HTMLInputElement, ComponentProps<'input'>>(
       <input
         ref={ref}
         className={cn(
-          'flex h-11 w-full rounded-xl border border-line bg-white px-3.5 py-2 text-sm text-ink shadow-sm transition placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-500/10',
+          'flex h-11 w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm text-ink shadow-sm transition placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger aria-invalid:ring-2 aria-invalid:ring-danger/10',
           className,
         )}
         {...props}
@@ -29,7 +29,7 @@ export function FieldLabel({ className, ...props }: ComponentProps<'label'>) {
 
 export function FieldError({ children }: { children?: ReactNode }) {
   return children ? (
-    <p role="alert" className="mt-1.5 text-xs font-medium text-red-600">
+    <p role="alert" className="mt-1.5 text-xs font-medium text-danger">
       {children}
     </p>
   ) : null;
