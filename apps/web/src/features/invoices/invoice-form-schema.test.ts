@@ -1,4 +1,7 @@
-import { MAX_INVOICE_AMOUNT_CENTS } from '@pagmanager/contracts';
+import {
+  MAX_INVOICE_AMOUNT_CENTS,
+  MAX_INVOICE_DESCRIPTION_LENGTH,
+} from '@pagmanager/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { invoiceFormSchema } from './invoice-form-schema';
@@ -32,5 +35,20 @@ describe('invoice form amount', () => {
 
   it('keeps the positive amount requirement of the form', () => {
     expect(invoiceFormSchema.safeParse(input('0,00')).success).toBe(false);
+  });
+});
+
+describe('invoice form description', () => {
+  it('accepts descriptions at the limit and rejects longer descriptions', () => {
+    const description = 'D'.repeat(MAX_INVOICE_DESCRIPTION_LENGTH);
+    expect(
+      invoiceFormSchema.safeParse({ ...input('1,00'), description }).success,
+    ).toBe(true);
+    expect(
+      invoiceFormSchema.safeParse({
+        ...input('1,00'),
+        description: `${description}D`,
+      }).success,
+    ).toBe(false);
   });
 });

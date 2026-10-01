@@ -28,6 +28,26 @@ export interface TestApp {
   env: AppConfig;
 }
 
+let nextTestIp = 1;
+
+/** Make a Hono test request with the socket binding used by getConnInfo. */
+export function requestFromIp(
+  app: ReturnType<typeof createApp>,
+  path: string,
+  init: RequestInit = {},
+  ipAddress = `2001:db8::${nextTestIp++}`,
+) {
+  return app.request(path, init, {
+    incoming: {
+      socket: {
+        remoteAddress: ipAddress,
+        remotePort: 43210,
+        remoteFamily: ipAddress.includes(':') ? 'IPv6' : 'IPv4',
+      },
+    },
+  });
+}
+
 export async function createTestApp(
   overrides: Partial<AppConfig> = {},
 ): Promise<TestApp> {
@@ -51,7 +71,7 @@ export async function registerUser(
   app: ReturnType<typeof createApp>,
   options: { email: string; username?: string; passwd?: string },
 ): Promise<{ token: string; user: Record<string, unknown> }> {
-  const res = await app.request('/api/v1/auth/register', {
+  const res = await requestFromIp(app, '/api/v1/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

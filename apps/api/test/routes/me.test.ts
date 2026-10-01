@@ -6,6 +6,7 @@ import {
   closeTestApp,
   createTestApp,
   registerUser,
+  requestFromIp,
   type TestApp,
 } from '../helpers/testApp.js';
 
@@ -89,5 +90,82 @@ describe('me routes', () => {
       body: JSON.stringify({ email: 'not-an-email' }),
     });
     expect(res.status).toBe(400);
+  });
+
+  it('PATCH / requires the current password before changing the password', async () => {
+    const res = await authed('/api/v1/me', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        passwd: 'replacement-password',
+        confirmPasswd: 'replacement-password',
+      }),
+    });
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('PATCH / rejects an incorrect current password before changing any profile fields', async () => {
+    const res = await authed('/api/v1/me', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        username: 'Must Not Be Saved',
+        passwd: 'replacement-password',
+        confirmPasswd: 'replacement-password',
+        currentPasswd: 'incorrect-current-password',
+      }),
+    });
+
+    expect(res.status).toBe(403);
+    expect((await res.json()).code).toBe('FORBIDDEN');
+
+    const profile = await authed('/api/v1/me');
+    expect((await profile.json()).username).toBe('Updated Name');
+  });
+
+  it('PATCH / changes the password after verifying the current password', async () => {
+    const res = await authed('/api/v1/me', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        passwd: 'replacement-password',
+        confirmPasswd: 'replacement-password',
+        currentPasswd: 'supersecret',
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const updatedUser = await res.json();
+    expect(JSON.stringify(updatedUser)).not.toContain('passwordHash');
+
+    const oldPasswordLogin = await requestFromIp(
+      app,
+      '/api/v1/auth/login',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'me@example.com',
+          passwd: 'supersecret',
+        }),
+      },
+      '2001:db8::200',
+    );
+    expect(oldPasswordLogin.status).toBe(401);
+
+    const newPasswordLogin = await requestFromIp(
+      app,
+      '/api/v1/auth/login',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'me@example.com',
+          passwd: 'replacement-password',
+        }),
+      },
+      '2001:db8::200',
+    );
+    expect(newPasswordLogin.status).toBe(200);
   });
 });

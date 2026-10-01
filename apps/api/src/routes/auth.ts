@@ -1,16 +1,20 @@
+import { getConnInfo } from '@hono/node-server/conninfo';
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import {
   authResponseSchema,
   checkEmailInputSchema,
   checkEmailResponseSchema,
+  errorResponseSchema,
   loginInputSchema,
   registerInputSchema,
 } from '@pagmanager/contracts';
 import { users } from '@pagmanager/db';
 import { eq } from 'drizzle-orm';
+import type { Context, MiddlewareHandler } from 'hono';
 import { signAuthToken } from '../auth/jwt.js';
 import { client } from '../db-client.js';
 import { AppError } from '../errors.js';
+import { IpRateLimiter } from '../security/ip-rate-limiter.js';
 import { hashPassword, verifyPassword } from '../security/password.js';
 import type { AppDeps, AppEnv } from '../types.js';
 import { validateRequest } from '../validation.js';
@@ -22,6 +26,40 @@ import {
   validationErrorResponse,
 } from './openapi.js';
 
+const RATE_LIMIT_ERROR = {
+  code: 'RATE_LIMITED',
+  message: 'Too many requests. Please try again later.',
+} as const;
+
+const rateLimitErrorResponse = {
+  429: jsonResponse(errorResponseSchema, 'Too many requests.'),
+};
+
+function remoteIpAddress(c: Context<AppEnv>): string {
+  try {
+    // Use the socket address exposed by @hono/node-server. Forwarded headers
+    // are client-controlled unless a trusted proxy explicitly normalizes them.
+    return getConnInfo(c).remote.address ?? 'unknown';
+  } catch {
+    // Hono's in-memory Request adapter (used by route tests) has no socket.
+    return 'unknown';
+  }
+}
+
+function rateLimitMiddleware(
+  limiter: IpRateLimiter,
+): MiddlewareHandler<AppEnv> {
+  return async (c, next) => {
+    const decision = limiter.consume(remoteIpAddress(c));
+    if (!decision.allowed) {
+      return c.json(RATE_LIMIT_ERROR, 429, {
+        'Retry-After': String(decision.retryAfterSeconds),
+      });
+    }
+    await next();
+  };
+}
+
 async function emailExists(deps: AppDeps, email: string): Promise<boolean> {
   const rows = await deps.db.client
     .select({ id: users.id })
@@ -32,6 +70,13 @@ async function emailExists(deps: AppDeps, email: string): Promise<boolean> {
 }
 
 export function createAuthRoutes(deps: AppDeps) {
+  // Limits are per connection IP and isolated by endpoint and app instance.
+  // The Node adapter supplies the remote socket IP; untrusted forwarded
+  // headers are intentionally ignored.
+  const registerRateLimit = new IpRateLimiter(5, 60 * 60 * 1000);
+  const loginRateLimit = new IpRateLimiter(10, 15 * 60 * 1000);
+  const checkEmailRateLimit = new IpRateLimiter(20, 15 * 60 * 1000);
+
   const auth = new OpenAPIHono<AppEnv>({
     defaultHook: (result) => {
       if (!result.success) {
@@ -61,6 +106,7 @@ export function createAuthRoutes(deps: AppDeps) {
       ),
       ...validationErrorResponse,
       ...conflictErrorResponse,
+      ...rateLimitErrorResponse,
       ...internalErrorResponse,
     },
   });
@@ -86,6 +132,7 @@ export function createAuthRoutes(deps: AppDeps) {
       ),
       ...validationErrorResponse,
       ...unauthorizedErrorResponse,
+      ...rateLimitErrorResponse,
       ...internalErrorResponse,
     },
   });
@@ -107,6 +154,7 @@ export function createAuthRoutes(deps: AppDeps) {
     responses: {
       200: jsonResponse(checkEmailResponseSchema, 'Email availability.'),
       ...validationErrorResponse,
+      ...rateLimitErrorResponse,
       ...internalErrorResponse,
     },
   });
@@ -118,6 +166,7 @@ export function createAuthRoutes(deps: AppDeps) {
   const routes = auth
     .post(
       registerOperation.getRoutingPath(),
+      rateLimitMiddleware(registerRateLimit),
       validateRequest('json', registerInputSchema),
       async (c) => {
         const input = c.req.valid('json');
@@ -169,6 +218,7 @@ export function createAuthRoutes(deps: AppDeps) {
 
     .post(
       loginOperation.getRoutingPath(),
+      rateLimitMiddleware(loginRateLimit),
       validateRequest('json', loginInputSchema),
       async (c) => {
         const input = c.req.valid('json');
@@ -221,6 +271,7 @@ export function createAuthRoutes(deps: AppDeps) {
 
     .post(
       checkEmailOperation.getRoutingPath(),
+      rateLimitMiddleware(checkEmailRateLimit),
       validateRequest('json', checkEmailInputSchema),
       async (c) => {
         const input = c.req.valid('json');

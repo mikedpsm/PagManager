@@ -40,12 +40,12 @@ jobs:
       - name: Check compressed image size
         run: bash scripts/check-compressed-image-size.sh pagmanager:release-check
 
-      - name: Scan image for critical vulnerabilities
+      - name: Scan image for high and critical vulnerabilities
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: pagmanager:release-check
           format: table
-          severity: CRITICAL
+          severity: HIGH,CRITICAL
           exit-code: '1'
 
       - name: Log in to GitHub Container Registry

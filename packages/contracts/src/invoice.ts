@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { MAX_INVOICE_DESCRIPTION_LENGTH } from './field-limits.js';
+
 export const invoiceStatusSchema = z.enum(['paid', 'pending', 'overdue']);
 
 export const MAX_INVOICE_AMOUNT_CENTS = 2_147_483_647;
@@ -23,11 +25,15 @@ export const invoiceSchema = z.object({
 
 export type Invoice = z.infer<typeof invoiceSchema>;
 
-export const createInvoiceInputSchema = invoiceSchema.omit({
-  id: true,
-  paidAt: true,
-  status: true,
-});
+export const createInvoiceInputSchema = invoiceSchema
+  .omit({
+    id: true,
+    paidAt: true,
+    status: true,
+  })
+  .extend({
+    description: z.string().min(1).max(MAX_INVOICE_DESCRIPTION_LENGTH),
+  });
 
 export type CreateInvoiceInput = z.infer<typeof createInvoiceInputSchema>;
 

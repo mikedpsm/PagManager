@@ -22,7 +22,7 @@ import { clearSession, getAccessToken } from './auth-storage';
 const apiOrigin =
   import.meta.env.VITE_API_URL?.replace(/\/$/, '') || window.location.origin;
 
-async function authenticatedFetch(
+export async function authenticatedFetch(
   input: RequestInfo | URL,
   init?: RequestInit,
 ) {

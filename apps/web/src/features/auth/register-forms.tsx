@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  MAX_USERNAME_LENGTH,
   type RegisterStep1,
   type RegisterStep2,
   registerStep1Schema,
@@ -83,6 +84,7 @@ export function RegisterStepOneForm({
           id="register-name"
           autoComplete="name"
           placeholder="Como podemos te chamar?"
+          maxLength={MAX_USERNAME_LENGTH}
           aria-invalid={Boolean(errors.username)}
           {...register('username')}
         />

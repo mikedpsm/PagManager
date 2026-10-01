@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   cpfSchema,
+  MAX_USERNAME_LENGTH,
   phoneSchema,
   type UpdateMeInput,
 } from '@pagmanager/contracts';
@@ -24,7 +25,14 @@ import { maskCpf, maskPhone } from '@/lib/format';
 
 const profileFormSchema = z
   .object({
-    username: z.string().trim().min(1, 'Informe seu nome.'),
+    username: z
+      .string()
+      .trim()
+      .min(1, 'Informe seu nome.')
+      .max(
+        MAX_USERNAME_LENGTH,
+        `O nome pode ter até ${MAX_USERNAME_LENGTH} caracteres.`,
+      ),
     email: z.email('Informe um e-mail válido.'),
     cpf: z
       .string()
@@ -48,6 +56,7 @@ const profileFormSchema = z
         'A senha precisa ter pelo menos 8 caracteres.',
       ),
     confirmPasswd: z.string().optional(),
+    currentPasswd: z.string().optional(),
   })
   .refine(
     (values) => !values.passwd || values.passwd === values.confirmPasswd,
@@ -55,7 +64,15 @@ const profileFormSchema = z
       path: ['confirmPasswd'],
       message: 'As senhas não coincidem.',
     },
-  );
+  )
+  .refine((values) => !values.passwd || Boolean(values.currentPasswd), {
+    path: ['currentPasswd'],
+    message: 'Informe sua senha atual para trocar a senha.',
+  })
+  .refine((values) => !values.currentPasswd || Boolean(values.passwd), {
+    path: ['passwd'],
+    message: 'Informe a nova senha para confirmar sua senha atual.',
+  });
 
 type ProfileInput = z.input<typeof profileFormSchema>;
 
@@ -82,6 +99,7 @@ export function ProfileDialog({
       phone: maskPhone(user?.phone ?? ''),
       passwd: '',
       confirmPasswd: '',
+      currentPasswd: '',
     },
   });
 
@@ -93,6 +111,7 @@ export function ProfileDialog({
       phone: maskPhone(user?.phone ?? ''),
       passwd: '',
       confirmPasswd: '',
+      currentPasswd: '',
     });
   }, [reset, user]);
 
@@ -104,7 +123,11 @@ export function ProfileDialog({
         ...(values.cpf ? { cpf: values.cpf.replace(/\D/g, '') } : {}),
         ...(values.phone ? { phone: values.phone.replace(/\D/g, '') } : {}),
         ...(values.passwd
-          ? { passwd: values.passwd, confirmPasswd: values.confirmPasswd }
+          ? {
+              passwd: values.passwd,
+              confirmPasswd: values.confirmPasswd,
+              currentPasswd: values.currentPasswd,
+            }
           : {}),
       };
       const updated = await api.updateMe(payload);
@@ -185,6 +208,19 @@ export function ProfileDialog({
               <span className="font-normal text-muted">(opcional)</span>
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel htmlFor="profile-current-password">
+                  Senha atual
+                </FieldLabel>
+                <Input
+                  id="profile-current-password"
+                  type="password"
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(errors.currentPasswd)}
+                  {...register('currentPasswd')}
+                />
+                <FieldError>{errors.currentPasswd?.message}</FieldError>
+              </div>
               <div>
                 <FieldLabel htmlFor="profile-password">Nova senha</FieldLabel>
                 <Input

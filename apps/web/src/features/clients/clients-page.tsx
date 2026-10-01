@@ -1,4 +1,8 @@
-import type { Client, CreateClientInput } from '@pagmanager/contracts';
+import {
+  type Client,
+  type CreateClientInput,
+  MAX_CLIENT_SEARCH_LENGTH,
+} from '@pagmanager/contracts';
 import { Link } from '@tanstack/react-router';
 import { ArrowDownAZ, ArrowUpAZ, Plus, Search, UsersRound } from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
@@ -84,6 +88,7 @@ export function ClientsPage() {
             id="clients-search"
             className="pl-9"
             value={search}
+            maxLength={MAX_CLIENT_SEARCH_LENGTH}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Nome, e-mail ou CPF"
           />

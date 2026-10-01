@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
+import { MAX_USERNAME_LENGTH } from './field-limits.js';
 import { userSchema } from './user.js';
 
 export const registerStep1Schema = z.object({
-  username: z.string().min(1),
+  username: z.string().min(1).max(MAX_USERNAME_LENGTH),
   email: z.email(),
 });
 

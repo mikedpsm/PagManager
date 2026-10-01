@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { cepSchema } from './cep.js';
 import { cpfSchema } from './cpf.js';
+import {
+  MAX_CLIENT_SEARCH_LENGTH,
+  MAX_USERNAME_LENGTH,
+} from './field-limits.js';
 import { phoneSchema } from './phone.js';
 
 export const clientStatusSchema = z.enum(['overdue', 'ok']);
@@ -30,6 +34,7 @@ export const createClientInputSchema = clientSchema
     status: true,
   })
   .extend({
+    username: z.string().min(1).max(MAX_USERNAME_LENGTH),
     phone: phoneSchema,
     cep: cepSchema.optional(),
   });
@@ -41,7 +46,7 @@ export const updateClientInputSchema = createClientInputSchema.partial();
 export type UpdateClientInput = z.infer<typeof updateClientInputSchema>;
 
 export const clientListQuerySchema = z.object({
-  search: z.string().optional(),
+  search: z.string().max(MAX_CLIENT_SEARCH_LENGTH).optional(),
   status: clientStatusSchema.optional(),
   sort: z.enum(['username', '-username']).optional(),
 });

@@ -1,5 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { Client, Invoice } from '@pagmanager/contracts';
+import {
+  type Client,
+  type Invoice,
+  MAX_INVOICE_DESCRIPTION_LENGTH,
+} from '@pagmanager/contracts';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -123,6 +127,7 @@ export function InvoiceDialog({
           <Input
             id="invoice-description"
             placeholder="Ex.: Consultoria mensal"
+            maxLength={MAX_INVOICE_DESCRIPTION_LENGTH}
             aria-invalid={Boolean(errors.description)}
             {...register('description')}
           />

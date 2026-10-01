@@ -9,8 +9,19 @@ import { compress } from 'hono/compress';
 
 import { createApp } from './app.js';
 import { loadEnv } from './env.js';
+import { logSafeError } from './safe-logger.js';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+
+function runtimeNodeEnv(): 'development' | 'test' | 'production' {
+  if (process.env.NODE_ENV === 'test') {
+    return 'test';
+  }
+  if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+    return 'development';
+  }
+  return 'production';
+}
 
 /**
  * Resolves the directory the SPA build output (from `apps/web`, Phase 5)
@@ -91,6 +102,8 @@ export interface ShutdownDeps {
   db: Pick<Db, 'close'>;
   exit?: (code: number) => void;
   log?: (...args: unknown[]) => void;
+  errorLog?: (...args: unknown[]) => void;
+  nodeEnv?: 'development' | 'test' | 'production';
   hardTimeoutMs?: number;
 }
 
@@ -102,6 +115,8 @@ export interface ShutdownDeps {
 export function createShutdownHandler(deps: ShutdownDeps) {
   const exit = deps.exit ?? process.exit.bind(process);
   const log = deps.log ?? console.log.bind(console);
+  const errorLog = deps.errorLog ?? deps.log ?? console.error.bind(console);
+  const nodeEnv = deps.nodeEnv ?? 'development';
   const hardTimeoutMs = deps.hardTimeoutMs ?? 10_000;
 
   return function shutdown(signal: string) {
@@ -115,12 +130,12 @@ export function createShutdownHandler(deps: ShutdownDeps) {
 
     deps.server.close(async (closeErr) => {
       if (closeErr) {
-        log('[server] Error while closing HTTP server:', closeErr);
+        logSafeError('shutdown_http_failed', closeErr, nodeEnv, errorLog);
       }
       try {
         await deps.db.close();
       } catch (dbErr) {
-        log('[server] Error while closing DB connection:', dbErr);
+        logSafeError('shutdown_database_failed', dbErr, nodeEnv, errorLog);
       } finally {
         clearTimeout(hardTimeout);
         exit(closeErr ? 1 : 0);
@@ -158,16 +173,19 @@ async function main(): Promise<void> {
     console.log(`PagManager API listening on http://localhost:${info.port}`);
   });
 
-  const shutdown = createShutdownHandler({ server, db });
+  const shutdown = createShutdownHandler({ server, db, nodeEnv: env.nodeEnv });
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 if (process.argv.includes('--healthcheck')) {
-  healthcheckMain();
+  healthcheckMain().catch((error) => {
+    logSafeError('healthcheck_failed', error, runtimeNodeEnv());
+    process.exitCode = 1;
+  });
 } else {
   main().catch((error) => {
-    console.error('Failed to start PagManager API:', error);
+    logSafeError('startup_failed', error, runtimeNodeEnv());
     process.exit(1);
   });
 }

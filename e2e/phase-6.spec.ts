@@ -15,6 +15,22 @@ test('registers, logs in, edits the profile, and logs out', async ({
   page,
   request,
 }) => {
+  const styleViolations: string[] = [];
+  await page.exposeFunction('reportStyleViolation', (directive: string) => {
+    styleViolations.push(directive);
+  });
+  await page.addInitScript(() => {
+    document.addEventListener('securitypolicyviolation', (event) => {
+      if (event.effectiveDirective.startsWith('style-src')) {
+        const report = (
+          window as typeof window & {
+            reportStyleViolation: (directive: string) => Promise<void>;
+          }
+        ).reportStyleViolation;
+        void report(event.effectiveDirective);
+      }
+    });
+  });
   const id = randomUUID().replaceAll('-', '').slice(0, 12);
   const account = {
     username: `Conta E2E ${id}`,
@@ -50,6 +66,9 @@ test('registers, logs in, edits the profile, and logs out', async ({
   await page.getByRole('button', { name: 'Abrir menu do perfil' }).click();
   await page.getByRole('menuitem', { name: 'Perfil e configurações' }).click();
   const profile = page.getByRole('dialog');
+  await expect(profile).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-scroll-locked', '1');
+  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
   const updatedName = `${account.username} Atualizada`;
   const updatedEmail = `atualizada-${id}@example.test`;
   const updatedPassword = `${account.password}-updated`;
@@ -67,10 +86,28 @@ test('registers, logs in, edits the profile, and logs out', async ({
   await expect(profile.getByLabel('Telefone')).toHaveValue('(11) 98888-7777');
   await profile.getByLabel('Nova senha', { exact: true }).fill(updatedPassword);
   await profile
+    .getByLabel('Senha atual', { exact: true })
+    .fill(account.password);
+  await profile
     .getByLabel('Confirmar senha', { exact: true })
     .fill(updatedPassword);
   await profile.getByRole('button', { name: 'Salvar perfil' }).click();
   await expect(profile).toBeHidden();
+  await expect(page.locator('body')).not.toHaveAttribute('data-scroll-locked');
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
+  await expect(
+    page.getByText('Perfil atualizado.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('[data-sonner-toaster]')).toHaveCSS(
+    'position',
+    'fixed',
+  );
+  await expect(
+    page
+      .locator('[data-sonner-toast]')
+      .filter({ hasText: 'Perfil atualizado.' }),
+  ).toHaveCSS('position', 'absolute');
+  expect(styleViolations).toEqual([]);
   await expect(
     page.getByRole('button', { name: 'Abrir menu do perfil' }),
   ).toContainText(updatedName);
@@ -127,7 +164,7 @@ test('creates a client and invoices, marks one paid, and shows dashboard totals'
   await paidRow
     .getByRole('button', { name: `Marcar ${paidDescription} como paga` })
     .click();
-  await expect(paidRow.getByText('Paga')).toBeVisible();
+  await expect(paidRow.getByText('Paga', { exact: true })).toBeVisible();
 
   await page.goto('/home');
   const summary = page.getByRole('region', { name: 'Resumo de cobranças' });
@@ -244,7 +281,20 @@ test('searches and filters clients, edits client details, and filters, edits and
   await dialog.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(dialog.getByText('Informe um CEP com 8 dígitos.')).toBeVisible();
   await expect(dialog).toBeVisible();
+  await page.route('https://viacep.com.br/ws/01001000/json/', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        logradouro: 'Praça da Sé',
+        bairro: 'Sé',
+        localidade: 'São Paulo',
+        uf: 'SP',
+      }),
+    }),
+  );
   await dialog.getByLabel('CEP').fill('01001000');
+  await dialog.getByRole('button', { name: 'Buscar endereço' }).click();
+  await expect(dialog.getByLabel('Cidade')).toHaveValue('São Paulo');
   await expect(dialog.getByLabel('Telefone')).toHaveValue('(11) 3333-4444');
   await expect(dialog.getByLabel('CEP')).toHaveValue('01001-000');
   await dialog.getByRole('button', { name: 'Salvar alterações' }).click();

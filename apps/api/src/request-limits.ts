@@ -1,0 +1,2 @@
+export const MAX_REQUEST_BODY_BYTES = 100 * 1024;
+export const MAX_REQUEST_BODY_DISPLAY = '100 KiB';

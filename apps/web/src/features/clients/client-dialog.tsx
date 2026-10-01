@@ -3,6 +3,7 @@ import {
   type Client,
   type CreateClientInput,
   createClientInputSchema,
+  MAX_USERNAME_LENGTH,
 } from '@pagmanager/contracts';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -158,6 +159,7 @@ export function ClientDialog({
             <Input
               id="client-name"
               autoComplete="name"
+              maxLength={MAX_USERNAME_LENGTH}
               aria-invalid={Boolean(errors.username)}
               {...register('username')}
             />

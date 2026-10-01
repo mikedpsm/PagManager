@@ -3,6 +3,8 @@ import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
 
 import { AppError } from './errors.js';
+import { MAX_REQUEST_BODY_DISPLAY } from './request-limits.js';
+import { logSafeError } from './safe-logger.js';
 
 interface PgErrorLike {
   code?: string;
@@ -21,7 +23,7 @@ function isPgUniqueViolation(err: unknown): err is PgErrorLike {
 
 function errorResponse(
   c: Context,
-  status: 400 | 401 | 403 | 404 | 409 | 500,
+  status: 400 | 401 | 403 | 404 | 409 | 413 | 500,
   code: string,
   message: string,
   details?: unknown,
@@ -36,8 +38,11 @@ function errorResponse(
   );
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Hono's app generics vary by caller.
-export function registerErrorHandler(app: Hono<any>): void {
+export function registerErrorHandler(
+  // biome-ignore lint/suspicious/noExplicitAny: Hono's app generics vary by caller.
+  app: Hono<any>,
+  nodeEnv: 'development' | 'test' | 'production' = 'development',
+): void {
   app.onError((err, c) => {
     if (err instanceof z.ZodError) {
       return errorResponse(
@@ -51,6 +56,15 @@ export function registerErrorHandler(app: Hono<any>): void {
 
     if (err instanceof HTTPException && err.status === 400) {
       return errorResponse(c, 400, 'VALIDATION_ERROR', 'Invalid request');
+    }
+
+    if (err instanceof HTTPException && err.status === 413) {
+      return errorResponse(
+        c,
+        413,
+        'PAYLOAD_TOO_LARGE',
+        `Request body must not exceed ${MAX_REQUEST_BODY_DISPLAY}`,
+      );
     }
 
     if (err instanceof SyntaxError) {
@@ -78,7 +92,7 @@ export function registerErrorHandler(app: Hono<any>): void {
       );
     }
 
-    console.error(err);
+    logSafeError('request_error', err, nodeEnv);
     return errorResponse(
       c,
       500,

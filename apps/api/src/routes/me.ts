@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import {
+  errorResponseSchema,
   normalizeCpf,
   updateMeInputSchema,
   userSchema,
@@ -9,7 +10,7 @@ import { and, eq, ne, or, type SQL } from 'drizzle-orm';
 import { authMiddleware } from '../auth/middleware.js';
 import { client } from '../db-client.js';
 import { AppError } from '../errors.js';
-import { hashPassword } from '../security/password.js';
+import { hashPassword, verifyPassword } from '../security/password.js';
 import type { AppDeps, AppEnv } from '../types.js';
 import { validateRequest } from '../validation.js';
 import {
@@ -68,6 +69,10 @@ export function createMeRoutes(deps: AppDeps) {
       200: jsonResponse(userSchema, 'The updated user profile.'),
       ...validationErrorResponse,
       ...unauthorizedErrorResponse,
+      403: jsonResponse(
+        errorResponseSchema,
+        'The current password is incorrect.',
+      ),
       ...notFoundErrorResponse,
       ...conflictErrorResponse,
       ...internalErrorResponse,
@@ -98,6 +103,24 @@ export function createMeRoutes(deps: AppDeps) {
       async (c) => {
         const currentUser = c.get('user');
         const input = c.req.valid('json');
+
+        if (input.passwd !== undefined) {
+          const passwordRows = await deps.db.client
+            .select({ passwordHash: users.passwordHash })
+            .from(users)
+            .where(eq(users.id, currentUser.id))
+            .limit(1);
+          const currentPasswordHash = passwordRows[0]?.passwordHash;
+          const currentPasswordValid = currentPasswordHash
+            ? await verifyPassword(
+                input.currentPasswd ?? '',
+                currentPasswordHash,
+              )
+            : false;
+          if (!currentPasswordValid) {
+            throw AppError.forbidden('Current password is incorrect');
+          }
+        }
 
         const normalizedCpf =
           input.cpf !== undefined ? normalizeCpf(input.cpf) : undefined;

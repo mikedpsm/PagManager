@@ -1,15 +1,12 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
-
+import { logSafeError } from '../safe-logger.js';
 import type { AppDeps } from '../types.js';
 import { jsonResponse } from './openapi.js';
 
 const healthOkSchema = z.object({ status: z.literal('ok') });
-const healthFailureSchema = z.object({
-  status: z.literal('error'),
-  message: z.string(),
-});
+const healthFailureSchema = z.object({ status: z.literal('error') });
 
 export function createHealthRoute(deps: AppDeps, operationId: string) {
   const health = new OpenAPIHono();
@@ -32,8 +29,8 @@ export function createHealthRoute(deps: AppDeps, operationId: string) {
       await deps.db.client.execute(sql`select 1`);
       return c.json({ status: 'ok' }, 200);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return c.json({ status: 'error', message }, 503);
+      logSafeError('health_check_failed', error, deps.env.nodeEnv);
+      return c.json({ status: 'error' }, 503);
     }
   });
 }

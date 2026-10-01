@@ -167,6 +167,7 @@ describe('user schemas', () => {
       updateMeInputSchema.safeParse({
         passwd: '12345678',
         confirmPasswd: '12345678',
+        currentPasswd: 'current-password',
       }).success,
     ).toBe(true);
   });
@@ -176,7 +177,24 @@ describe('user schemas', () => {
       updateMeInputSchema.safeParse({
         passwd: '12345678',
         confirmPasswd: '87654321',
+        currentPasswd: 'current-password',
       }).success,
+    ).toBe(false);
+  });
+
+  it('rejects UpdateMeInput password changes without a current password', () => {
+    expect(
+      updateMeInputSchema.safeParse({
+        passwd: '12345678',
+        confirmPasswd: '12345678',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects UpdateMeInput with a current password but no new password', () => {
+    expect(
+      updateMeInputSchema.safeParse({ currentPasswd: 'current-password' })
+        .success,
     ).toBe(false);
   });
 
