@@ -1,3 +1,4 @@
+import { MAX_INVOICE_AMOUNT_CENTS } from '@pagmanager/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { createApp } from '../../src/app.js';
@@ -93,6 +94,45 @@ describe('invoices routes', () => {
     expect(res.status).toBe(400);
   });
 
+  it('creates and reads an invoice at the int32 amount limit', async () => {
+    const create = await asA()('/api/v1/invoices', {
+      method: 'POST',
+      body: JSON.stringify({
+        clientId: clientAId,
+        description: 'Maximum amount',
+        amountCents: MAX_INVOICE_AMOUNT_CENTS,
+        dueDate: '2030-06-15',
+      }),
+    });
+    expect(create.status).toBe(201);
+    const created = await create.json();
+    expect(created.amountCents).toBe(MAX_INVOICE_AMOUNT_CENTS);
+
+    const read = await asA()(`/api/v1/invoices/${created.id}`);
+    expect(read.status).toBe(200);
+    expect((await read.json()).amountCents).toBe(MAX_INVOICE_AMOUNT_CENTS);
+  });
+
+  it('rejects an amount above int32 without inserting an invoice', async () => {
+    const before = await (await asA()('/api/v1/invoices')).json();
+    const res = await asA()('/api/v1/invoices', {
+      method: 'POST',
+      body: JSON.stringify({
+        clientId: clientAId,
+        description: 'Overflow amount',
+        amountCents: MAX_INVOICE_AMOUNT_CENTS + 1,
+        dueDate: '2030-06-15',
+      }),
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe('VALIDATION_ERROR');
+
+    const after = await (await asA()('/api/v1/invoices')).json();
+    expect(after.map((invoice: { id: string }) => invoice.id)).toEqual(
+      before.map((invoice: { id: string }) => invoice.id),
+    );
+  });
+
   let invoiceId: string;
 
   it('creates an invoice for own client', async () => {
@@ -142,6 +182,59 @@ describe('invoices routes', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.dueDate).toBe('2031-01-01');
+  });
+
+  it('validates PATCH amounts before writing and keeps partial updates', async () => {
+    const create = await asA()('/api/v1/invoices', {
+      method: 'POST',
+      body: JSON.stringify({
+        clientId: clientAId,
+        description: 'Patch boundary',
+        amountCents: 1200,
+        dueDate: '2032-04-05',
+      }),
+    });
+    expect(create.status).toBe(201);
+    const created = await create.json();
+
+    const atLimit = await asA()(`/api/v1/invoices/${created.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ amountCents: MAX_INVOICE_AMOUNT_CENTS }),
+    });
+    expect(atLimit.status).toBe(200);
+    expect((await atLimit.json()).amountCents).toBe(MAX_INVOICE_AMOUNT_CENTS);
+
+    const beforeOverflow = await (
+      await asA()(`/api/v1/invoices/${created.id}`)
+    ).json();
+    const overflow = await asA()(`/api/v1/invoices/${created.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ amountCents: MAX_INVOICE_AMOUNT_CENTS + 1 }),
+    });
+    expect(overflow.status).toBe(400);
+    expect((await overflow.json()).code).toBe('VALIDATION_ERROR');
+
+    const afterOverflow = await (
+      await asA()(`/api/v1/invoices/${created.id}`)
+    ).json();
+    expect(afterOverflow).toMatchObject({
+      amountCents: beforeOverflow.amountCents,
+      dueDate: beforeOverflow.dueDate,
+      clientId: beforeOverflow.clientId,
+      description: beforeOverflow.description,
+    });
+
+    const descriptionOnly = await asA()(`/api/v1/invoices/${created.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ description: 'Partial patch preserved' }),
+    });
+    expect(descriptionOnly.status).toBe(200);
+    expect(await descriptionOnly.json()).toMatchObject({
+      amountCents: MAX_INVOICE_AMOUNT_CENTS,
+      dueDate: '2032-04-05',
+      clientId: clientAId,
+      description: 'Partial patch preserved',
+    });
   });
 
   it('POST /:id/pay marks the invoice paid and is idempotent', async () => {

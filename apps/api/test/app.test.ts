@@ -34,6 +34,7 @@ describe('createApp', () => {
     const body = await res.json();
     expect(body.openapi).toBe('3.1.0');
     expect(body.info.title).toBe('PagManager API');
+    expect(Object.keys(body.paths)).not.toHaveLength(0);
   });
 
   it('GET /docs returns an HTML page', async () => {

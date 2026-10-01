@@ -30,8 +30,13 @@ export function createApp(deps: AppDeps) {
   // before any route so validation/thrown errors are always funneled
   // through a single, consistent error-response shape.
   registerErrorHandler(app);
+  app.openAPIRegistry.registerComponent('securitySchemes', 'BearerAuth', {
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+  });
 
-  const healthRoute = createHealthRoute(deps);
+  const healthRoute = createHealthRoute(deps, 'getHealth');
 
   const v1 = new OpenAPIHono<AppEnv>({
     defaultHook: (result) => {
@@ -40,7 +45,7 @@ export function createApp(deps: AppDeps) {
       }
     },
   })
-    .route('/health', healthRoute)
+    .route('/health', createHealthRoute(deps, 'getApiV1Health'))
     .route('/auth', createAuthRoutes(deps))
     .route('/me', createMeRoutes(deps))
     .route('/clients', createClientsRoutes(deps))
