@@ -1,7 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-
 import loginSide from '@/assets/images/login_side.png';
+import { BrandLogo } from '@/components/brand/brand-logo';
 import { useAuth } from './auth-provider';
 import { LoginForm } from './login-form';
 
@@ -26,14 +26,8 @@ export function LoginPage() {
     <main className="grid min-h-screen bg-white lg:grid-cols-[minmax(25rem,0.9fr)_1.1fr]">
       <section className="flex items-center justify-center px-6 py-12 sm:px-10 lg:px-16">
         <div className="w-full max-w-md">
-          <Link
-            to="/login"
-            className="mb-10 inline-flex items-center gap-2 text-lg font-bold tracking-tight text-brand-dark"
-          >
-            <span className="grid size-9 place-items-center rounded-xl bg-brand text-white">
-              P
-            </span>{' '}
-            PagManager
+          <Link to="/login" className="mb-10 inline-flex">
+            <BrandLogo />
           </Link>
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">

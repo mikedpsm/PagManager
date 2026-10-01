@@ -46,3 +46,6 @@ legacy
 debug.log
 report.*.json
 *.lcov
+
+# Local isolated checkouts
+.worktrees/
