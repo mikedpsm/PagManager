@@ -10,7 +10,7 @@
     "build": "tsdown --config-loader native",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -b",
     "test": "vitest run --maxWorkers=2 --hookTimeout=30000"
   },
   "dependencies": {

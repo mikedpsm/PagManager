@@ -1,21 +1,23 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
     "lib": ["ES2023"],
+    "sourceMap": true,
+    "outDir": "dist-types",
+    "rootDir": "src",
+    "types": ["node"],
+    "tsBuildInfoFile": "./dist-types/tsconfig.tsbuildinfo",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "verbatimModuleSyntax": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "types": ["node"]
+    "emitDeclarationOnly": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "extends": "../../tsconfig.base.json",
+  "references": [
+    {
+      "path": "../../packages/contracts"
+    },
+    {
+      "path": "../../packages/db"
+    }
+  ]
 }
