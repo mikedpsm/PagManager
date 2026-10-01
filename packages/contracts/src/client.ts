@@ -12,9 +12,9 @@ export const clientSchema = z.object({
   username: z.string().min(1),
   email: z.email(),
   cpf: cpfSchema,
-  phone: phoneSchema,
+  phone: z.string().min(1),
   city: z.string().optional(),
-  cep: cepSchema.optional(),
+  cep: z.string().optional(),
   uf: z.string().max(2).optional(),
   street: z.string().optional(),
   region: z.string().optional(),
@@ -24,10 +24,15 @@ export const clientSchema = z.object({
 
 export type Client = z.infer<typeof clientSchema>;
 
-export const createClientInputSchema = clientSchema.omit({
-  id: true,
-  status: true,
-});
+export const createClientInputSchema = clientSchema
+  .omit({
+    id: true,
+    status: true,
+  })
+  .extend({
+    phone: phoneSchema,
+    cep: cepSchema.optional(),
+  });
 
 export type CreateClientInput = z.infer<typeof createClientInputSchema>;
 

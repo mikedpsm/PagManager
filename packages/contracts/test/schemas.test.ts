@@ -15,6 +15,7 @@ import {
   invoiceListQuerySchema,
   invoiceSchema,
   loginInputSchema,
+  MAX_INVOICE_AMOUNT_CENTS,
   registerInputSchema,
   registerStep1Schema,
   registerStep2Schema,
@@ -262,6 +263,50 @@ describe('client schemas', () => {
 describe('invoice schemas', () => {
   it('parses Invoice', () => {
     expect(invoiceSchema.safeParse(validInvoice).success).toBe(true);
+  });
+
+  it('accepts zero and the maximum PostgreSQL integer amount', () => {
+    expect(
+      invoiceSchema.safeParse({
+        ...validInvoice,
+        amountCents: MAX_INVOICE_AMOUNT_CENTS,
+      }).success,
+    ).toBe(true);
+    expect(
+      createInvoiceInputSchema.safeParse({
+        clientId: uuid,
+        description: 'Maximum amount',
+        amountCents: MAX_INVOICE_AMOUNT_CENTS,
+        dueDate: '2024-01-15',
+      }).success,
+    ).toBe(true);
+    expect(
+      createInvoiceInputSchema.safeParse({
+        clientId: uuid,
+        description: 'Zero amount',
+        amountCents: 0,
+        dueDate: '2024-01-15',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects amounts above the PostgreSQL integer limit', () => {
+    const amountCents = MAX_INVOICE_AMOUNT_CENTS + 1;
+    expect(
+      invoiceSchema.safeParse({ ...validInvoice, amountCents }).success,
+    ).toBe(false);
+    expect(updateInvoiceInputSchema.safeParse({ amountCents }).success).toBe(
+      false,
+    );
+  });
+
+  it('rejects unsafe integer amounts', () => {
+    expect(
+      invoiceSchema.safeParse({
+        ...validInvoice,
+        amountCents: Number.MAX_SAFE_INTEGER + 1,
+      }).success,
+    ).toBe(false);
   });
 
   it('parses Invoice with paidAt and paid status', () => {

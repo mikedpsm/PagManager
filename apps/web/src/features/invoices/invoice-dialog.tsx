@@ -1,13 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  type Client,
-  createInvoiceInputSchema,
-  type Invoice,
-} from '@pagmanager/contracts';
+import type { Client, Invoice } from '@pagmanager/contracts';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,25 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { maskBrlAmount, parseBRL } from '@/lib/format';
+import { maskBrlAmount } from '@/lib/format';
 
-const invoiceFormSchema = z
-  .object({
-    clientId: createInvoiceInputSchema.shape.clientId,
-    description: createInvoiceInputSchema.shape.description,
-    amount: z
-      .string()
-      .refine(
-        (value) => Number.isFinite(parseBRL(value)) && parseBRL(value) > 0,
-        'Informe um valor válido.',
-      )
-      .transform(parseBRL),
-    dueDate: createInvoiceInputSchema.shape.dueDate,
-  })
-  .transform(({ amount, ...rest }) => ({ ...rest, amountCents: amount }));
-
-type InvoiceFormInput = z.input<typeof invoiceFormSchema>;
-type InvoiceFormOutput = z.output<typeof invoiceFormSchema>;
+import {
+  type InvoiceFormInput,
+  type InvoiceFormOutput,
+  invoiceFormSchema,
+} from './invoice-form-schema';
 
 interface InvoiceDialogProps {
   clients: Client[];

@@ -1,4 +1,4 @@
-import { OpenAPIHono } from '@hono/zod-openapi';
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import {
   authResponseSchema,
   checkEmailInputSchema,
@@ -14,6 +14,13 @@ import { AppError } from '../errors.js';
 import { hashPassword, verifyPassword } from '../security/password.js';
 import type { AppDeps, AppEnv } from '../types.js';
 import { validateRequest } from '../validation.js';
+import {
+  conflictErrorResponse,
+  internalErrorResponse,
+  jsonResponse,
+  unauthorizedErrorResponse,
+  validationErrorResponse,
+} from './openapi.js';
 
 async function emailExists(deps: AppDeps, email: string): Promise<boolean> {
   const rows = await deps.db.client
@@ -33,9 +40,84 @@ export function createAuthRoutes(deps: AppDeps) {
     },
   });
 
+  const registerOperation = createRoute({
+    method: 'post',
+    path: '/register',
+    operationId: 'registerAuth',
+    tags: ['Auth'],
+    summary: 'Register a user',
+    request: {
+      body: {
+        required: true,
+        content: {
+          'application/json': { schema: registerInputSchema },
+        },
+      },
+    },
+    responses: {
+      201: jsonResponse(
+        authResponseSchema,
+        'The user and access token were created.',
+      ),
+      ...validationErrorResponse,
+      ...conflictErrorResponse,
+      ...internalErrorResponse,
+    },
+  });
+
+  const loginOperation = createRoute({
+    method: 'post',
+    path: '/login',
+    operationId: 'loginAuth',
+    tags: ['Auth'],
+    summary: 'Log in with email and password',
+    request: {
+      body: {
+        required: true,
+        content: {
+          'application/json': { schema: loginInputSchema },
+        },
+      },
+    },
+    responses: {
+      200: jsonResponse(
+        authResponseSchema,
+        'An access token and user profile.',
+      ),
+      ...validationErrorResponse,
+      ...unauthorizedErrorResponse,
+      ...internalErrorResponse,
+    },
+  });
+
+  const checkEmailOperation = createRoute({
+    method: 'post',
+    path: '/check-email',
+    operationId: 'checkAuthEmail',
+    tags: ['Auth'],
+    summary: 'Check whether an email can be registered',
+    request: {
+      body: {
+        required: true,
+        content: {
+          'application/json': { schema: checkEmailInputSchema },
+        },
+      },
+    },
+    responses: {
+      200: jsonResponse(checkEmailResponseSchema, 'Email availability.'),
+      ...validationErrorResponse,
+      ...internalErrorResponse,
+    },
+  });
+
+  auth.openAPIRegistry.registerPath(registerOperation);
+  auth.openAPIRegistry.registerPath(loginOperation);
+  auth.openAPIRegistry.registerPath(checkEmailOperation);
+
   const routes = auth
     .post(
-      '/register',
+      registerOperation.getRoutingPath(),
       validateRequest('json', registerInputSchema),
       async (c) => {
         const input = c.req.valid('json');
@@ -85,56 +167,60 @@ export function createAuthRoutes(deps: AppDeps) {
       },
     )
 
-    .post('/login', validateRequest('json', loginInputSchema), async (c) => {
-      const input = c.req.valid('json');
+    .post(
+      loginOperation.getRoutingPath(),
+      validateRequest('json', loginInputSchema),
+      async (c) => {
+        const input = c.req.valid('json');
 
-      const rows = await deps.db.client
-        .select({
-          id: users.id,
-          username: users.username,
-          email: users.email,
-          cpf: users.cpf,
-          phone: users.phone,
-          passwordHash: users.passwordHash,
-        })
-        .from(users)
-        .where(eq(users.email, input.email))
-        .limit(1);
+        const rows = await deps.db.client
+          .select({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            cpf: users.cpf,
+            phone: users.phone,
+            passwordHash: users.passwordHash,
+          })
+          .from(users)
+          .where(eq(users.email, input.email))
+          .limit(1);
 
-      const found = rows[0];
+        const found = rows[0];
 
-      // Never reveal whether the email or the password was the problem - a
-      // single generic error avoids leaking which accounts exist.
-      if (!found) {
-        throw AppError.unauthorized('Invalid email or password');
-      }
+        // Never reveal whether the email or the password was the problem - a
+        // single generic error avoids leaking which accounts exist.
+        if (!found) {
+          throw AppError.unauthorized('Invalid email or password');
+        }
 
-      const passwordValid = await verifyPassword(
-        input.passwd,
-        found.passwordHash,
-      );
-      if (!passwordValid) {
-        throw AppError.unauthorized('Invalid email or password');
-      }
+        const passwordValid = await verifyPassword(
+          input.passwd,
+          found.passwordHash,
+        );
+        if (!passwordValid) {
+          throw AppError.unauthorized('Invalid email or password');
+        }
 
-      const token = await signAuthToken(found.id, deps.env.jwtSecret);
+        const token = await signAuthToken(found.id, deps.env.jwtSecret);
 
-      const body = authResponseSchema.parse({
-        token,
-        user: {
-          id: found.id,
-          username: found.username,
-          email: found.email,
-          cpf: found.cpf ?? undefined,
-          phone: found.phone ?? undefined,
-        },
-      });
+        const body = authResponseSchema.parse({
+          token,
+          user: {
+            id: found.id,
+            username: found.username,
+            email: found.email,
+            cpf: found.cpf ?? undefined,
+            phone: found.phone ?? undefined,
+          },
+        });
 
-      return c.json(body, 200);
-    })
+        return c.json(body, 200);
+      },
+    )
 
     .post(
-      '/check-email',
+      checkEmailOperation.getRoutingPath(),
       validateRequest('json', checkEmailInputSchema),
       async (c) => {
         const input = c.req.valid('json');

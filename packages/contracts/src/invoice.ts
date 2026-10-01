@@ -2,13 +2,20 @@ import { z } from 'zod';
 
 export const invoiceStatusSchema = z.enum(['paid', 'pending', 'overdue']);
 
+export const MAX_INVOICE_AMOUNT_CENTS = 2_147_483_647;
+export const invoiceAmountCentsSchema = z
+  .number()
+  .int()
+  .nonnegative()
+  .max(MAX_INVOICE_AMOUNT_CENTS);
+
 export type InvoiceStatus = z.infer<typeof invoiceStatusSchema>;
 
 export const invoiceSchema = z.object({
   id: z.uuid(),
   clientId: z.uuid(),
   description: z.string().min(1),
-  amountCents: z.number().int().nonnegative(),
+  amountCents: invoiceAmountCentsSchema,
   dueDate: z.iso.date(),
   paidAt: z.iso.datetime().nullable(),
   status: invoiceStatusSchema,
