@@ -70,7 +70,7 @@ pnpm test
 pnpm test:e2e
 ```
 
-`typecheck` and `test` build the shared packages first so they also work before a full application build. `test` runs each package's unit and integration tests in sequence; `test:e2e` builds the application and runs Playwright separately. Database commands are available as `pnpm db:generate`, `pnpm db:migrate`, and `pnpm db:seed`.
+`typecheck` runs `tsc -b` using the root project references: contracts and database first, then the API and web app. The projects inherit strict settings from `tsconfig.base.json`; Node packages use NodeNext resolution and the web app uses Bundler resolution. The API's generated declarations live in `apps/api/dist-types`, separate from its runtime bundle. `test` builds shared packages and runs each package's unit and integration tests in sequence; `test:e2e` builds the application and runs Playwright separately. Database commands are available as `pnpm db:generate`, `pnpm db:migrate`, and `pnpm db:seed`.
 
 ## Run with Docker Compose
 
@@ -143,7 +143,7 @@ pnpm start
 
 Acesse <http://localhost:5000>. Sem `DATABASE_URL`, a API usa PGlite e mantém os dados e o segredo JWT gerado no diretório `DATA_DIR` (por padrão, `./data`). Para iniciar a API e a aplicação web juntas durante o desenvolvimento, execute `pnpm dev`. Esse comando compila os pacotes compartilhados antes de iniciar os dois servidores; após alterar esses pacotes, execute `pnpm build:shared` para atualizar os arquivos gerados. Para desenvolver separadamente, execute `pnpm --filter @pagmanager/api dev` e `pnpm --filter @pagmanager/web dev` em terminais diferentes. O Vite usa a porta 5173 e encaminha as chamadas `/api` para a API na porta 5000.
 
-Execute `pnpm lint`, `pnpm typecheck` e `pnpm test` na raiz para verificar o workspace. Os dois últimos compilam os pacotes compartilhados antes das verificações. `pnpm test:e2e` compila a aplicação e executa os testes Playwright separadamente. Os comandos de banco são `pnpm db:generate`, `pnpm db:migrate` e `pnpm db:seed`.
+Execute `pnpm lint`, `pnpm typecheck` e `pnpm test` na raiz para verificar o workspace. `typecheck` usa `tsc -b` e as referências entre projetos para compilar os contratos e o banco antes da API e da aplicação web. As opções strict ficam em `tsconfig.base.json`; os pacotes Node usam resolução NodeNext e o frontend usa Bundler. As declarações da API ficam em `apps/api/dist-types`, separadas do bundle de execução. `test` compila os pacotes compartilhados antes das verificações. `pnpm test:e2e` compila a aplicação e executa os testes Playwright separadamente. Os comandos de banco são `pnpm db:generate`, `pnpm db:migrate` e `pnpm db:seed`.
 
 ### Executar com Docker Compose
 

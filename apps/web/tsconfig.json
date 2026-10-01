@@ -1,24 +1,30 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] },
-    "skipLibCheck": true,
-    "moduleResolution": "Bundler",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vite/client", "vite-plugin-svgr/client"]
+    "types": ["vite/client", "vite-plugin-svgr/client"],
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
-  "include": ["src", ".storybook"]
+  "include": ["src", ".storybook"],
+  "extends": "../../tsconfig.base.json",
+  "references": [
+    {
+      "path": "../../packages/contracts"
+    },
+    {
+      "path": "../api"
+    }
+  ]
 }

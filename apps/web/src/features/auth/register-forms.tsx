@@ -18,13 +18,15 @@ import { Button } from '@/components/ui/button';
 import { FieldError, FieldLabel, Input } from '@/components/ui/input';
 
 function Progress({ step }: { step: number }) {
-  const icons = [UserRound, LockKeyhole, CircleCheck];
-  const labels = ['Seus dados', 'Segurança', 'Pronto'];
+  const steps = [
+    { Icon: UserRound, label: 'Seus dados' },
+    { Icon: LockKeyhole, label: 'Segurança' },
+    { Icon: CircleCheck, label: 'Pronto' },
+  ];
   return (
     <ol aria-label="Etapas do cadastro" className="mb-8 flex items-start">
-      {labels.map((label, index) => {
+      {steps.map(({ Icon, label }, index) => {
         const current = index + 1;
-        const Icon = icons[index];
         return (
           <li
             key={label}

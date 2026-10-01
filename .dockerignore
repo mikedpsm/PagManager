@@ -10,6 +10,7 @@ package-lock.json
 
 # Generated output and local runtime data
 **/dist
+**/dist-types
 **/build
 apps/web/storybook-static
 coverage
