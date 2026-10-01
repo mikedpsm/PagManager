@@ -2,8 +2,8 @@ import type { RegisterStep1, RegisterStep2 } from '@pagmanager/contracts';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
 import { Card } from '@/components/ui/card';
+import { ThemeSelector } from '@/features/theme/theme-selector';
 import { api } from '@/lib/api';
 import { useAuth } from './auth-provider';
 import {
@@ -70,9 +70,12 @@ export function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
       <Card className="w-full max-w-lg p-6 shadow-lg shadow-slate-900/5 sm:p-10">
+        <div className="mb-6 flex justify-end">
+          <ThemeSelector />
+        </div>
         <Link
           to="/login"
-          className="mb-8 inline-flex items-center gap-2 text-base font-bold text-brand-dark"
+          className="mb-8 inline-flex items-center gap-2 text-base font-bold text-brand-strong"
         >
           <span className="grid size-8 place-items-center rounded-lg bg-brand text-white">
             P
@@ -114,7 +117,7 @@ export function RegisterPage() {
           Já tem uma conta?{' '}
           <Link
             to="/login"
-            className="font-semibold text-brand hover:underline"
+            className="font-semibold text-brand-text hover:underline"
           >
             Entrar
           </Link>

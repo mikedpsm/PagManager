@@ -15,7 +15,7 @@ export function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        'flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-line bg-white px-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-brand/20 data-[placeholder]:text-muted',
+        'flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-brand/20 data-[placeholder]:text-muted',
         className,
       )}
       {...props}
@@ -39,7 +39,7 @@ export function SelectContent({
       <SelectPrimitive.Content
         position={position}
         className={cn(
-          'z-[60] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border border-line bg-white p-1 shadow-xl',
+          'z-[60] max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border border-line bg-surface p-1 shadow-xl',
           className,
         )}
         {...props}
@@ -58,14 +58,14 @@ export function SelectItem({
   return (
     <SelectPrimitive.Item
       className={cn(
-        'relative flex cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-9 text-sm outline-none focus:bg-emerald-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-9 text-sm outline-none focus:bg-success-soft data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
     >
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className="absolute right-2">
-        <Check className="size-4 text-brand" aria-hidden="true" />
+        <Check className="size-4 text-brand-text" aria-hidden="true" />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   );

@@ -175,7 +175,7 @@ export function InvoicesPage() {
           </CardContent>
         ) : invoices.isError ? (
           <CardContent className="p-8 text-center">
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-danger">
               {invoices.error.message}
             </p>
             <Button
@@ -196,7 +196,7 @@ export function InvoicesPage() {
           />
         ) : (
           <CardContent className="flex flex-col items-center py-14 text-center">
-            <span className="grid size-12 place-items-center rounded-full bg-emerald-50 text-brand">
+            <span className="grid size-12 place-items-center rounded-full bg-success-soft text-brand-text">
               <FileText className="size-6" />
             </span>
             <h3 className="mt-4 font-semibold text-ink">

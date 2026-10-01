@@ -133,7 +133,7 @@ export function ClientsPage() {
           </CardContent>
         ) : clients.isError ? (
           <CardContent className="p-8 text-center">
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-danger">
               {clients.error.message}
             </p>
             <Button
@@ -146,7 +146,7 @@ export function ClientsPage() {
           </CardContent>
         ) : !clients.data.length ? (
           <CardContent className="flex flex-col items-center px-5 py-14 text-center">
-            <span className="grid size-12 place-items-center rounded-full bg-emerald-50 text-brand">
+            <span className="grid size-12 place-items-center rounded-full bg-success-soft text-brand-text">
               <UsersRound className="size-6" />
             </span>
             <h3 className="mt-4 font-semibold text-ink">
@@ -196,7 +196,7 @@ function ClientRow({ client }: { client: Client }) {
         <Link
           to="/clients/$clientId"
           params={{ clientId: client.id }}
-          className="font-semibold text-ink hover:text-brand"
+          className="font-semibold text-ink hover:text-brand-text"
         >
           {client.username}
           <span className="mt-1 block text-xs font-normal text-muted">
@@ -219,7 +219,7 @@ function ClientRow({ client }: { client: Client }) {
         <Link
           to="/clients/$clientId"
           params={{ clientId: client.id }}
-          className="text-sm font-semibold text-brand hover:underline"
+          className="text-sm font-semibold text-brand-text hover:underline"
         >
           Ver perfil
         </Link>

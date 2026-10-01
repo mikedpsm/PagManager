@@ -73,7 +73,7 @@ export function InvoiceTable({
                     title="Marcar como paga"
                     onClick={() => onPaid(invoice)}
                   >
-                    <Check className="size-4 text-brand" />
+                    <Check className="size-4 text-brand-text" />
                   </Button>
                 )}
                 <Button
@@ -92,7 +92,7 @@ export function InvoiceTable({
                   title="Excluir"
                   onClick={() => onDelete(invoice)}
                 >
-                  <Trash2 className="size-4 text-red-600" />
+                  <Trash2 className="size-4 text-danger" />
                 </Button>
               </div>
             </TableCell>

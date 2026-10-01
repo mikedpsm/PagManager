@@ -20,21 +20,21 @@ const summaryCards = [
     key: 'paidCents',
     label: 'Recebido',
     icon: CreditCard,
-    tone: 'text-brand bg-emerald-50',
+    tone: 'text-brand-text bg-success-soft',
     note: 'pagamentos concluídos',
   },
   {
     key: 'pendingCents',
     label: 'A vencer',
     icon: Clock3,
-    tone: 'text-amber-700 bg-amber-50',
+    tone: 'text-warning bg-warning-soft',
     note: 'cobranças pendentes',
   },
   {
     key: 'overdueCents',
     label: 'Em atraso',
     icon: ArrowDownRight,
-    tone: 'text-rose-700 bg-rose-50',
+    tone: 'text-danger bg-danger-soft',
     note: 'precisam de atenção',
   },
 ] as const;
@@ -59,7 +59,7 @@ export function DashboardPage() {
     return (
       <div
         role="alert"
-        className="rounded-2xl border border-red-200 bg-white p-8 text-center"
+        className="rounded-2xl border border-danger/30 bg-surface p-8 text-center"
       >
         <h2 className="font-semibold text-ink">
           Não foi possível carregar o resumo.
@@ -77,7 +77,7 @@ export function DashboardPage() {
     <div className="space-y-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-medium text-brand">
+          <p className="text-sm font-medium text-brand-text">
             Seu resumo financeiro
           </p>
           <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
