@@ -20,7 +20,7 @@ function scalarContentSecurityPolicy(nonce: string | undefined): string {
   return [
     "default-src 'self'",
     `script-src 'self' https://cdn.jsdelivr.net ${nonceSource}`.trim(),
-    `style-src 'self' ${nonceSource}`.trim(),
+    "style-src 'self' 'unsafe-inline'",
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data: https://cdn.jsdelivr.net",
@@ -48,7 +48,7 @@ export function createApp(deps: AppDeps) {
       : (deps.env.corsOrigin ?? '*');
   app.use('*', cors({ origin: corsOrigin }));
 
-  // Scalar needs a narrowly scoped CSP exception for its style attributes and
+  // Scalar needs a narrowly scoped CSP exception for its inline styles and
   // the script it loads from jsDelivr. Register this wrapper outside
   // secureHeaders so it can replace the general policy after the response is
   // produced. The SPA keeps the stricter self-only policy below.
@@ -74,7 +74,9 @@ export function createApp(deps: AppDeps) {
         imgSrc: ["'self'", 'data:', 'blob:'],
         objectSrc: ["'none'"],
         scriptSrc: ["'self'", NONCE],
-        styleSrc: ["'self'", NONCE],
+        // Sonner and Radix inject inline style elements without consistently
+        // attaching a nonce. Scripts remain restricted to self and the nonce.
+        styleSrc: ["'self'", "'unsafe-inline'"],
         styleSrcAttr: ["'unsafe-inline'"],
       },
     }),

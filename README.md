@@ -123,6 +123,8 @@ New access tokens expire after one hour. The browser still stores them in `local
 
 HTTP request bodies are limited to 100 KiB. Input names are limited to 100 characters, invoice descriptions to 500 characters, and client searches to 100 characters. Existing records remain readable. The server also sets a Content-Security-Policy on the served frontend, omits database details from public health failures and sanitizes production error logs.
 
+The frontend CSP allows inline CSS required by Sonner notifications and Radix dialogs. Scripts remain restricted to the same origin and a response nonce, without `unsafe-inline` or `unsafe-eval`. Development API documentation has a separate policy that permits its jsDelivr scripts and inline CSS; `/docs` and `/openapi.json` return 404 in production.
+
 Public authentication endpoints limit each connection IP to 10 login attempts per 15 minutes, 5 registrations per hour and 20 email availability checks per 15 minutes. A blocked request returns 429 with `Retry-After`. Each endpoint tracks at most 10,000 addresses per server process; if that capacity is reached, new addresses must wait for a window to expire. Client-supplied forwarding headers are not trusted. Behind a reverse proxy, clients may share the proxy's address, so also configure client-aware limits at that trusted proxy. With multiple replicas, use a shared limiter at the gateway to enforce an aggregate limit.
 
 ## Authors

@@ -55,6 +55,18 @@ describe('createApp', () => {
     const nonce = /'nonce-([^']+)'/.exec(policy)?.[1];
     expect(nonce).toBeTruthy();
     expect(policy).toContain('https://cdn.jsdelivr.net');
+    const scriptSrc = policy
+      .split(';')
+      .map((directive) => directive.trim())
+      .find((directive) => directive.startsWith('script-src '));
+    const styleSrc = policy
+      .split(';')
+      .map((directive) => directive.trim())
+      .find((directive) => directive.startsWith('style-src '));
+    expect(scriptSrc).toContain(`'nonce-${nonce}'`);
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(styleSrc).toBe("style-src 'self' 'unsafe-inline'");
+    expect(styleSrc).not.toContain("'nonce-");
     expect(policy).toContain("style-src-attr 'unsafe-inline'");
     expect(policy).not.toContain("'unsafe-eval'");
     expect(policy).not.toMatch(/script-src[^;]*'unsafe-inline'/);
@@ -77,6 +89,18 @@ describe('createApp', () => {
     expect(policy).toContain("default-src 'self'");
     expect(policy).toContain("object-src 'none'");
     expect(policy).toContain("frame-ancestors 'none'");
+    const scriptSrc = policy
+      .split(';')
+      .map((directive) => directive.trim())
+      .find((directive) => directive.startsWith('script-src '));
+    const styleSrc = policy
+      .split(';')
+      .map((directive) => directive.trim())
+      .find((directive) => directive.startsWith('style-src '));
+    expect(scriptSrc).toMatch(/^script-src 'self' 'nonce-[^']+'$/);
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(styleSrc).toBe("style-src 'self' 'unsafe-inline'");
+    expect(styleSrc).not.toContain("'nonce-");
     expect(policy).toContain("style-src-attr 'unsafe-inline'");
     const connectSrc = policy
       .split(';')

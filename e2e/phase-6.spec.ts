@@ -15,6 +15,22 @@ test('registers, logs in, edits the profile, and logs out', async ({
   page,
   request,
 }) => {
+  const styleViolations: string[] = [];
+  await page.exposeFunction('reportStyleViolation', (directive: string) => {
+    styleViolations.push(directive);
+  });
+  await page.addInitScript(() => {
+    document.addEventListener('securitypolicyviolation', (event) => {
+      if (event.effectiveDirective.startsWith('style-src')) {
+        const report = (
+          window as typeof window & {
+            reportStyleViolation: (directive: string) => Promise<void>;
+          }
+        ).reportStyleViolation;
+        void report(event.effectiveDirective);
+      }
+    });
+  });
   const id = randomUUID().replaceAll('-', '').slice(0, 12);
   const account = {
     username: `Conta E2E ${id}`,
@@ -50,6 +66,9 @@ test('registers, logs in, edits the profile, and logs out', async ({
   await page.getByRole('button', { name: 'Abrir menu do perfil' }).click();
   await page.getByRole('menuitem', { name: 'Perfil e configurações' }).click();
   const profile = page.getByRole('dialog');
+  await expect(profile).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-scroll-locked', '1');
+  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
   const updatedName = `${account.username} Atualizada`;
   const updatedEmail = `atualizada-${id}@example.test`;
   const updatedPassword = `${account.password}-updated`;
@@ -74,6 +93,21 @@ test('registers, logs in, edits the profile, and logs out', async ({
     .fill(updatedPassword);
   await profile.getByRole('button', { name: 'Salvar perfil' }).click();
   await expect(profile).toBeHidden();
+  await expect(page.locator('body')).not.toHaveAttribute('data-scroll-locked');
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
+  await expect(
+    page.getByText('Perfil atualizado.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('[data-sonner-toaster]')).toHaveCSS(
+    'position',
+    'fixed',
+  );
+  await expect(
+    page
+      .locator('[data-sonner-toast]')
+      .filter({ hasText: 'Perfil atualizado.' }),
+  ).toHaveCSS('position', 'absolute');
+  expect(styleViolations).toEqual([]);
   await expect(
     page.getByRole('button', { name: 'Abrir menu do perfil' }),
   ).toContainText(updatedName);
