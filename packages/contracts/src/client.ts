@@ -1,6 +1,7 @@
 import { z } from 'zod';
-
+import { cepSchema } from './cep.js';
 import { cpfSchema } from './cpf.js';
+import { phoneSchema } from './phone.js';
 
 export const clientStatusSchema = z.enum(['overdue', 'ok']);
 
@@ -11,9 +12,9 @@ export const clientSchema = z.object({
   username: z.string().min(1),
   email: z.email(),
   cpf: cpfSchema,
-  phone: z.string().min(1),
+  phone: phoneSchema,
   city: z.string().optional(),
-  cep: z.string().optional(),
+  cep: cepSchema.optional(),
   uf: z.string().max(2).optional(),
   street: z.string().optional(),
   region: z.string().optional(),

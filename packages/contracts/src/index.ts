@@ -1,4 +1,5 @@
 export * from './auth.js';
+export * from './cep.js';
 export * from './client.js';
 export * from './cpf.js';
 export * from './dashboard.js';
@@ -6,4 +7,5 @@ export * from './errors.js';
 export * from './i18n.js';
 export * from './invoice.js';
 export * from './money.js';
+export * from './phone.js';
 export * from './user.js';

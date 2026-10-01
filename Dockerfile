@@ -30,6 +30,7 @@ RUN mkdir -p /image-data && chown 65532:65532 /image-data
 FROM pnpm-base AS production-dependencies
 
 COPY package.json ./
+COPY scripts/install-hooks.mjs scripts/install-hooks.mjs
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY packages/contracts/package.json packages/contracts/package.json

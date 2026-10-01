@@ -1,0 +1,8 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: '*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,json,jsonc,css,graphql,gql}'
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+    typecheck:
+      run: pnpm typecheck

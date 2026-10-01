@@ -45,7 +45,7 @@ export const seedClients: NewClient[] = [
     username: 'Camilla Straider',
     email: 'cami-stdr@protonmail.edu',
     cpf: '89940018237',
-    phone: '672234307',
+    phone: '6732234307',
     city: 'São Bernardo do Campo',
     cep: '62368-470',
     uf: 'SP',

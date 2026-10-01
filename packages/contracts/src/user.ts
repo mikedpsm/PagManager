@@ -1,13 +1,14 @@
 import { z } from 'zod';
 
 import { cpfSchema } from './cpf.js';
+import { phoneSchema } from './phone.js';
 
 export const userSchema = z.object({
   id: z.uuid(),
   username: z.string().min(1),
   email: z.email(),
   cpf: cpfSchema.optional(),
-  phone: z.string().optional(),
+  phone: phoneSchema.optional(),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -19,7 +20,7 @@ export const updateMeInputSchema = z
     passwd: z.string().min(8).optional(),
     confirmPasswd: z.string().optional(),
     cpf: cpfSchema.optional(),
-    phone: z.string().optional(),
+    phone: phoneSchema.optional(),
   })
   .refine(
     (data) => data.passwd === undefined || data.passwd === data.confirmPasswd,
