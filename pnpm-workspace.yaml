@@ -2,13 +2,8 @@ packages:
   - 'packages/*'
   - 'apps/*'
 allowBuilds:
-  '@scarf/scarf': false
-  core-js: false
-  core-js-pure: false
   esbuild: true
   msw: true
-  nodemon: false
-  sodium-native: false
 minimumReleaseAgeExclude:
   - '@vitest/mocker@5.0.2'
   - '@vitest/spy@5.0.2'
