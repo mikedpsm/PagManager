@@ -164,7 +164,7 @@ test('creates a client and invoices, marks one paid, and shows dashboard totals'
   await paidRow
     .getByRole('button', { name: `Marcar ${paidDescription} como paga` })
     .click();
-  await expect(paidRow.getByText('Paga')).toBeVisible();
+  await expect(paidRow.getByText('Paga', { exact: true })).toBeVisible();
 
   await page.goto('/home');
   const summary = page.getByRole('region', { name: 'Resumo de cobranças' });
