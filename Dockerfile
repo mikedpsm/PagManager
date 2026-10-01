@@ -16,6 +16,20 @@ RUN corepack enable \
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 
+FROM pnpm-base AS development
+
+ENV LEFTHOOK=0
+COPY . .
+RUN pnpm install --offline --frozen-lockfile
+ENTRYPOINT ["/bin/sh", "/app/scripts/container-entrypoint.sh"]
+CMD ["pnpm", "dev:docker"]
+
+FROM development AS e2e
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+RUN pnpm exec playwright install --with-deps chromium
+CMD ["pnpm", "test:e2e"]
+
 FROM pnpm-base AS build
 
 COPY . .
