@@ -1,3 +1,36 @@
+# Standalone development stack: docker compose -f compose.dev.yaml up --build
+x-workspace: &workspace
+  image: pagmanager-development:local
+  build:
+    context: .
+    target: development
+  init: true
+  working_dir: /app
+  environment: &dev-environment
+    NODE_ENV: development
+    LEFTHOOK: "0"
+    PORT: "5000"
+    DATA_DIR: /data
+    DATABASE_URL: "postgres://${POSTGRES_USER:-pagmanager}:${POSTGRES_PASSWORD:-pagmanager-dev}@postgres:5432/${POSTGRES_DB:-pagmanager}"
+    CORS_ORIGIN: "http://localhost:${WEB_PORT:-5173}"
+    VITE_HOST: "0.0.0.0"
+    DOCKER_WATCH_POLLING: "true"
+    CHOKIDAR_USEPOLLING: "true"
+    CHOKIDAR_INTERVAL: "300"
+    TSC_WATCHFILE: DynamicPriorityPolling
+    TSC_WATCHDIRECTORY: DynamicPriorityPolling
+  volumes:
+    - .:/app
+    - root-dependencies:/app/node_modules
+    - api-dependencies:/app/apps/api/node_modules
+    - web-dependencies:/app/apps/web/node_modules
+    - contracts-dependencies:/app/packages/contracts/node_modules
+    - db-dependencies:/app/packages/db/node_modules
+    - dev-data:/data
+  depends_on:
+    postgres:
+      condition: service_healthy
+
 services:
   postgres:
     image: postgres:17
@@ -6,7 +39,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-pagmanager}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pagmanager-dev}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-dev-data:/var/lib/postgresql/data
     healthcheck:
@@ -16,5 +49,69 @@ services:
       retries: 10
       start_period: 10s
 
+  dev:
+    <<: *workspace
+    ports:
+      - "${API_PORT:-5000}:5000"
+      - "${WEB_PORT:-5173}:5173"
+
+  storybook:
+    <<: *workspace
+    profiles: [storybook]
+    command: [pnpm, --filter, '@pagmanager/web', storybook, --host, 0.0.0.0]
+    ports:
+      - "${STORYBOOK_PORT:-6006}:6006"
+
+  tools:
+    <<: *workspace
+    profiles: [tools]
+    command: [pnpm, --help]
+
+  postgres-test:
+    image: postgres:17
+    profiles: [test]
+    environment:
+      POSTGRES_DB: pagmanager_test
+      POSTGRES_USER: pagmanager_test
+      POSTGRES_PASSWORD: pagmanager-test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pagmanager_test -d pagmanager_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  tests:
+    <<: *workspace
+    profiles: [test]
+    environment:
+      <<: *dev-environment
+      DATABASE_URL: postgres://pagmanager_test:pagmanager-test@postgres-test:5432/pagmanager_test
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    command: [pnpm, test]
+
+  e2e:
+    <<: *workspace
+    image: pagmanager-e2e:local
+    build:
+      context: .
+      target: e2e
+    profiles: [test]
+    environment:
+      <<: *dev-environment
+      PLAYWRIGHT_BROWSERS_PATH: /opt/playwright
+    shm_size: 1gb
+    depends_on: {}
+    command: [pnpm, test:e2e]
+
 volumes:
   postgres-dev-data:
+  dev-data:
+  root-dependencies:
+  api-dependencies:
+  web-dependencies:
+  contracts-dependencies:
+  db-dependencies:

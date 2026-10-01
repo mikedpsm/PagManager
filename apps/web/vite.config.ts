@@ -22,9 +22,14 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   server: {
+    host: process.env.VITE_HOST,
+    strictPort: true,
+    watch: {
+      usePolling: process.env.DOCKER_WATCH_POLLING === 'true',
+    },
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
     },

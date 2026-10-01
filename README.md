@@ -90,7 +90,72 @@ docker compose logs -f app
 
 On PowerShell, use `Copy-Item .env.example .env` for the first command. The app is available at <http://localhost:8080> (or the `APP_PORT` configured in `.env`). Compose stores PostgreSQL and application data in named volumes. `/docs` and `/openapi.json` return 404 in production.
 
-To run only PostgreSQL in a local development environment, start the database service from `compose.dev.yaml`:
+### Development entirely in Docker
+
+Docker Engine with Compose v2 (or Docker Desktop with Linux containers) is the
+only required runtime on the host. No local Node.js, pnpm or browser installation
+is needed. Start the frontend, API, shared-package watchers and PostgreSQL with:
+
+```sh
+docker compose -f compose.dev.yaml up --build -d
+docker compose -f compose.dev.yaml logs -f dev
+```
+
+Open <http://localhost:5173>; the API and its reference are available at
+<http://localhost:5000> and <http://localhost:5000/docs>. Source is bind-mounted,
+so edits refresh the frontend and restart the API. Contracts and database
+packages are rebuilt continuously. Polling supports Docker Desktop file mounts.
+Linux dependencies live in named volumes, separate from any host `node_modules`.
+Dependencies are installed automatically on container startup using the lockfile.
+After changing dependencies, restart the development service.
+
+This standalone Compose file supplies development defaults and needs no `.env`.
+If you already have a production `.env`, Compose also reads its `POSTGRES_*`
+values; changing PostgreSQL credentials does not change an existing volume's
+credentials. Use separate Compose project names (`-p pagmanager-dev` and
+`-p pagmanager-prod`) when running both environments concurrently. Override
+`WEB_PORT`, `API_PORT`, `STORYBOOK_PORT` or `POSTGRES_PORT` if their ports are busy.
+
+Every project command can run through the `tools` service:
+
+| Task | Command |
+| --- | --- |
+| Build app | `docker compose -f compose.dev.yaml run --rm tools pnpm build` |
+| Lint | `docker compose -f compose.dev.yaml run --rm tools pnpm lint` |
+| Fix formatting | `docker compose -f compose.dev.yaml run --rm tools pnpm lint:fix` |
+| Typecheck | `docker compose -f compose.dev.yaml run --rm tools pnpm typecheck` |
+| Unit and integration tests | `docker compose -f compose.dev.yaml run --rm tests` |
+| E2E tests with Chromium | `docker compose -f compose.dev.yaml run --build --rm e2e` |
+| Generate migrations | `docker compose -f compose.dev.yaml run --rm tools pnpm db:generate` |
+| Apply migrations | `docker compose -f compose.dev.yaml run --rm tools pnpm db:migrate` |
+| Seed development database | `docker compose -f compose.dev.yaml run --rm tools pnpm db:seed` |
+| Build Storybook | `docker compose -f compose.dev.yaml run --rm tools pnpm --filter @pagmanager/web storybook:build` |
+| Open container shell | `docker compose -f compose.dev.yaml run --rm tools sh` |
+
+The `tests` service uses a separate PostgreSQL container with temporary storage,
+so integration tests do not use development data. E2E tests build and launch
+their own temporary app with PGlite; their image includes Chromium and its Linux
+libraries. Traces and test output are written to `test-results` in the checkout.
+The optional services are enabled automatically by `compose run`; to start
+Storybook at <http://localhost:6006>, use:
+
+```sh
+docker compose -f compose.dev.yaml --profile storybook up --build -d
+```
+
+Build/test commands and watchers share generated outputs. Stop `dev` before
+running builds, typechecks or tests to avoid concurrent writes:
+
+```sh
+docker compose -f compose.dev.yaml stop dev storybook
+docker compose -f compose.dev.yaml run --rm tests
+docker compose -f compose.dev.yaml up -d dev
+```
+
+Stop the stack with `docker compose -f compose.dev.yaml --profile '*' down`.
+Named volumes retain data and dependencies; adding `--volumes` deletes them.
+
+To run only PostgreSQL for development outside Docker:
 
 ```sh
 docker compose -f compose.dev.yaml up -d postgres

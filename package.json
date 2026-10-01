@@ -15,6 +15,7 @@
     "start": "node apps/api/dist/server.mjs",
     "build:shared": "pnpm --filter @pagmanager/contracts build && pnpm --filter @pagmanager/db build",
     "dev": "pnpm build:shared && pnpm --parallel --filter @pagmanager/api --filter @pagmanager/web dev",
+    "dev:docker": "pnpm build:shared && pnpm --parallel --filter @pagmanager/contracts --filter @pagmanager/db --filter @pagmanager/api --filter @pagmanager/web dev",
     "build": "pnpm --filter @pagmanager/contracts build && pnpm --filter @pagmanager/db build && pnpm --filter @pagmanager/api build && pnpm --filter @pagmanager/web build",
     "test:e2e": "node e2e/run.mjs",
     "lint": "biome check .",
