@@ -1,5 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { cpfSchema, type UpdateMeInput } from '@pagmanager/contracts';
+import {
+  cpfSchema,
+  phoneSchema,
+  type UpdateMeInput,
+} from '@pagmanager/contracts';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -29,7 +33,13 @@ const profileFormSchema = z
         (value) => !value || cpfSchema.safeParse(value).success,
         'CPF inválido.',
       ),
-    phone: z.string().optional(),
+    phone: z
+      .string()
+      .optional()
+      .refine(
+        (value) => !value || phoneSchema.safeParse(value).success,
+        'Informe um telefone com DDD e 10 ou 11 dígitos.',
+      ),
     passwd: z
       .string()
       .optional()

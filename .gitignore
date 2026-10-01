@@ -47,6 +47,7 @@ jspm_packages/
 apps/web/storybook-static/
 
 pglite/
+/data/
 apps/*/data/
 
 # TypeScript v1 declaration files
@@ -78,7 +79,8 @@ typings/
 
 # dotenv environment variables file
 .env
-.env.test
+.env.*
+!.env.example
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

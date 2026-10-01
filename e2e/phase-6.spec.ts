@@ -13,6 +13,7 @@ import {
 
 test('registers, logs in, edits the profile, and logs out', async ({
   page,
+  request,
 }) => {
   const id = randomUUID().replaceAll('-', '').slice(0, 12);
   const account = {
@@ -50,8 +51,24 @@ test('registers, logs in, edits the profile, and logs out', async ({
   await page.getByRole('menuitem', { name: 'Perfil e configurações' }).click();
   const profile = page.getByRole('dialog');
   const updatedName = `${account.username} Atualizada`;
+  const updatedEmail = `atualizada-${id}@example.test`;
+  const updatedPassword = `${account.password}-updated`;
   await profile.getByLabel('Nome').fill(updatedName);
+  await profile.getByLabel('E-mail').fill(updatedEmail);
+  await profile.getByLabel('CPF').fill('00000000353');
+  await profile.getByLabel('Telefone').fill('123');
+  await profile.getByRole('button', { name: 'Salvar perfil' }).click();
+  await expect(
+    profile.getByText('Informe um telefone com DDD e 10 ou 11 dígitos.'),
+  ).toBeVisible();
+  await expect(profile).toBeVisible();
   await profile.getByLabel('Telefone').fill('11988887777');
+  await expect(profile.getByLabel('CPF')).toHaveValue('000.000.003-53');
+  await expect(profile.getByLabel('Telefone')).toHaveValue('(11) 98888-7777');
+  await profile.getByLabel('Nova senha', { exact: true }).fill(updatedPassword);
+  await profile
+    .getByLabel('Confirmar senha', { exact: true })
+    .fill(updatedPassword);
   await profile.getByRole('button', { name: 'Salvar perfil' }).click();
   await expect(profile).toBeHidden();
   await expect(
@@ -60,6 +77,20 @@ test('registers, logs in, edits the profile, and logs out', async ({
 
   await logout(page);
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
+  const oldCredentials = await request.post('/api/v1/auth/login', {
+    data: { email: updatedEmail, passwd: account.password },
+  });
+  expect(oldCredentials.status()).toBe(401);
+  await page.getByLabel('E-mail').fill(updatedEmail);
+  await page.getByLabel('Senha', { exact: true }).fill(updatedPassword);
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/home$/);
+  await page.getByRole('button', { name: 'Abrir menu do perfil' }).click();
+  await page.getByRole('menuitem', { name: 'Perfil e configurações' }).click();
+  await expect(profile.getByLabel('Nome')).toHaveValue(updatedName);
+  await expect(profile.getByLabel('E-mail')).toHaveValue(updatedEmail);
+  await expect(profile.getByLabel('CPF')).toHaveValue('000.000.003-53');
+  await expect(profile.getByLabel('Telefone')).toHaveValue('(11) 98888-7777');
 });
 
 test('creates a client and invoices, marks one paid, and shows dashboard totals', async ({
@@ -188,6 +219,92 @@ test('deleting a client removes its invoices from the authenticated API', async 
       await request.get(`/api/v1/invoices/${createdInvoice?.id}`, { headers })
     ).status(),
   ).toBe(404);
+});
+
+test('searches and filters clients, edits client details, and filters, edits and deletes invoices', async ({
+  page,
+  request,
+}) => {
+  const account = await registerApiAccount(request);
+  await openAuthenticatedPage(page, account.session);
+  const client = await createClientThroughUi(page);
+  const otherClient = await createClientThroughUi(page);
+  await page.getByLabel('Buscar clientes').fill(client.email);
+  await expect(page.getByText(client.username)).toBeVisible();
+  await expect(page.getByText(otherClient.username)).toBeHidden();
+  await page.getByRole('link', { name: new RegExp(client.username) }).click();
+  await page
+    .getByRole('button', { name: 'Editar cliente', exact: true })
+    .click();
+  const dialog = page.getByRole('dialog');
+  const updatedName = `${client.username} Revisado`;
+  await dialog.getByLabel('Nome completo').fill(updatedName);
+  await dialog.getByLabel('Telefone').fill('1133334444');
+  await dialog.getByLabel('CEP').fill('01001');
+  await dialog.getByRole('button', { name: 'Salvar alterações' }).click();
+  await expect(dialog.getByText('Informe um CEP com 8 dígitos.')).toBeVisible();
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel('CEP').fill('01001000');
+  await expect(dialog.getByLabel('Telefone')).toHaveValue('(11) 3333-4444');
+  await expect(dialog.getByLabel('CEP')).toHaveValue('01001-000');
+  await dialog.getByRole('button', { name: 'Salvar alterações' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole('heading', { name: updatedName })).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Editar cliente', exact: true })
+    .click();
+  await expect(dialog.getByLabel('CEP')).toHaveValue('01001-000');
+  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+
+  const overdue = 'Cobrança vencida para filtro';
+  const pending = 'Cobrança futura para filtro';
+  const updatedDescription = 'Cobrança revisada para exclusão';
+  await createInvoiceThroughUi(page, updatedName, {
+    description: overdue,
+    amount: '12,34',
+    dueDate: dateOffset(-14),
+  });
+  await createInvoiceThroughUi(page, otherClient.username, {
+    description: pending,
+    amount: '56,78',
+    dueDate: dateOffset(14),
+  });
+  await page.getByRole('combobox', { name: 'Filtrar por situação' }).click();
+  await page.getByRole('option', { name: 'Em atraso', exact: true }).click();
+  await expect(page.getByText(overdue, { exact: true })).toBeVisible();
+  await expect(page.getByText(pending, { exact: true })).toBeHidden();
+  await page
+    .getByRole('button', { name: `Editar ${overdue}`, exact: true })
+    .click();
+  await dialog.getByLabel('Descrição').fill(updatedDescription);
+  await dialog.getByLabel('Valor (R$)').fill('98,76');
+  await dialog.getByRole('button', { name: 'Salvar alterações' }).click();
+  await expect(dialog).toBeHidden();
+  const row = page.getByRole('row', { name: new RegExp(updatedDescription) });
+  await expect(row).toContainText('98,76');
+  await page
+    .getByRole('button', { name: `Excluir ${updatedDescription}`, exact: true })
+    .click();
+  await dialog
+    .getByRole('button', { name: 'Excluir cobrança', exact: true })
+    .click();
+  await expect(dialog).toBeHidden();
+  await expect(row).toBeHidden();
+
+  await page.goto('/clients');
+  await page.getByRole('combobox', { name: 'Situação', exact: true }).click();
+  await page.getByRole('option', { name: 'Em atraso', exact: true }).click();
+  await expect(
+    page.getByRole('link', { name: new RegExp(updatedName) }),
+  ).toBeHidden();
+  await page.getByRole('combobox', { name: 'Situação', exact: true }).click();
+  await page.getByRole('option', { name: 'Em dia', exact: true }).click();
+  await expect(
+    page.getByRole('link', { name: new RegExp(updatedName) }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: new RegExp(otherClient.username) }),
+  ).toBeVisible();
 });
 
 async function logout(page: import('@playwright/test').Page) {

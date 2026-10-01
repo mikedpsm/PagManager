@@ -70,7 +70,9 @@ pnpm test
 pnpm test:e2e
 ```
 
-`typecheck` runs `tsc -b` using the root project references: contracts and database first, then the API and web app. The projects inherit strict settings from `tsconfig.base.json`; Node packages use NodeNext resolution and the web app uses Bundler resolution. The API's generated declarations live in `apps/api/dist-types`, separate from its runtime bundle. `test` builds shared packages and runs each package's unit and integration tests in sequence; `test:e2e` builds the application and runs Playwright separately. Database commands are available as `pnpm db:generate`, `pnpm db:migrate`, and `pnpm db:seed`.
+`typecheck` runs `tsc -b` using the root project references: contracts and database first, then the API and web app. The projects inherit strict settings from `tsconfig.base.json`; Node packages use NodeNext resolution and the web app uses Bundler resolution. The API's generated declarations live in `apps/api/dist-types`, separate from its runtime bundle. `test` builds shared packages and runs the four projects listed in `vitest.workspace.ts` through the root Vitest configuration. Database and API suites run in separate groups; `test:e2e` builds the application and runs Playwright separately. Database commands are available as `pnpm db:generate`, `pnpm db:migrate`, and `pnpm db:seed`.
+
+`pnpm install` installs Lefthook in Git checkouts with development dependencies. Before each commit, hooks check staged source files with the pinned local Biome and run `tsc -b`. Run `pnpm hooks:install` to reinstall the hooks. Source archives and container builds skip hook installation; set `LEFTHOOK=0` to skip the automatic installation when needed.
 
 ## Run with Docker Compose
 
@@ -143,7 +145,9 @@ pnpm start
 
 Acesse <http://localhost:5000>. Sem `DATABASE_URL`, a API usa PGlite e mantém os dados e o segredo JWT gerado no diretório `DATA_DIR` (por padrão, `./data`). Para iniciar a API e a aplicação web juntas durante o desenvolvimento, execute `pnpm dev`. Esse comando compila os pacotes compartilhados antes de iniciar os dois servidores; após alterar esses pacotes, execute `pnpm build:shared` para atualizar os arquivos gerados. Para desenvolver separadamente, execute `pnpm --filter @pagmanager/api dev` e `pnpm --filter @pagmanager/web dev` em terminais diferentes. O Vite usa a porta 5173 e encaminha as chamadas `/api` para a API na porta 5000.
 
-Execute `pnpm lint`, `pnpm typecheck` e `pnpm test` na raiz para verificar o workspace. `typecheck` usa `tsc -b` e as referências entre projetos para compilar os contratos e o banco antes da API e da aplicação web. As opções strict ficam em `tsconfig.base.json`; os pacotes Node usam resolução NodeNext e o frontend usa Bundler. As declarações da API ficam em `apps/api/dist-types`, separadas do bundle de execução. `test` compila os pacotes compartilhados antes das verificações. `pnpm test:e2e` compila a aplicação e executa os testes Playwright separadamente. Os comandos de banco são `pnpm db:generate`, `pnpm db:migrate` e `pnpm db:seed`.
+Execute `pnpm lint`, `pnpm typecheck` e `pnpm test` na raiz para verificar o workspace. `typecheck` usa `tsc -b` e as referências entre projetos para compilar os contratos e o banco antes da API e da aplicação web. As opções strict ficam em `tsconfig.base.json`; os pacotes Node usam resolução NodeNext e o frontend usa Bundler. As declarações da API ficam em `apps/api/dist-types`, separadas do bundle de execução. `test` compila os pacotes compartilhados e executa os quatro projetos de `vitest.workspace.ts` pela configuração Vitest da raiz, com grupos separados para banco e API. `pnpm test:e2e` compila a aplicação e executa os testes Playwright separadamente. Os comandos de banco são `pnpm db:generate`, `pnpm db:migrate` e `pnpm db:seed`.
+
+`pnpm install` instala o Lefthook em checkouts Git com dependências de desenvolvimento. Antes de cada commit, os hooks verificam os arquivos staged com o Biome local e executam `tsc -b`. Use `pnpm hooks:install` para reinstalar os hooks. Builds de contêiner e arquivos de código sem Git pulam a instalação; `LEFTHOOK=0` desativa a instalação automática quando necessário.
 
 ### Executar com Docker Compose
 
