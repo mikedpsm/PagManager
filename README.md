@@ -1,15 +1,19 @@
 # PagManager
 
-PagManager is a self-hosted billing management app for keeping client records, invoices, and payment status in one place. The dashboard summarizes paid, upcoming, and overdue invoices. The web app and API are served from the same application in production.
+PagManager is an independent, self-hosted billing management product that brings clients, invoices, and payment tracking into one workspace. It helps you organize billing and see what has been paid, what is coming due, and what is overdue.
+
+Deploy it on your own infrastructure with persistent local storage or PostgreSQL. The web app, REST API, and interactive API reference run together in a single deployment.
 
 ![PagManager dashboard](docs/pagmanager-dashboard.png)
 
 ## Features
 
-- Manage clients and their invoices.
-- Track paid, upcoming, and overdue charges from the dashboard.
-- Register and manage user profiles.
-- Use the web app, REST API, and interactive API reference from one deployment.
+- **Client management:** keep client records and their invoices together.
+- **Invoice tracking:** manage invoices and track their payment status.
+- **Billing overview:** monitor paid, upcoming, and overdue invoices from the dashboard.
+- **User accounts:** register, sign in, and manage your profile.
+- **Self-hosting:** run with PGlite or PostgreSQL using pnpm or Docker Compose.
+- **API access:** use the REST API and its interactive reference alongside the web app.
 
 ## Architecture
 
@@ -111,65 +115,11 @@ The application accepts these variables:
 
 Compose also reads `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `APP_PORT`, and `PAGMANAGER_IMAGE`. `compose.dev.yaml` also accepts `POSTGRES_PORT`. Keep `.env` private and replace all example secrets before deployment.
 
-## Modernization references
-
-The [`legacy-v1` tag](https://github.com/mikedpsm/PagManager/tree/legacy-v1) preserves the original v1 backend at commit `a401d3f`, immediately before the first modernization merge. The [`modernize` branch](https://github.com/mikedpsm/PagManager/tree/modernize) was created from `main` at commit `ad55b96` when [task T0.1 (#11)](https://github.com/mikedpsm/PagManager/issues/11) was completed.
-
-To inspect the original package metadata from a local checkout:
-
-```sh
-git fetch origin tag legacy-v1
-git show legacy-v1:package.json
-```
-
 ## Authors
 
 - **Maicon Douglas Paiva da Silva** — [LinkedIn](https://www.linkedin.com/in/mikedpsm/)
 - **Jonatas Ximenez** — [LinkedIn](https://www.linkedin.com/in/devindio/)
 
-The root package metadata retains the ISC license recorded in the repository's initial public commit.
+## License
 
-## Português (Brasil)
-
-PagManager é uma aplicação auto-hospedada para organizar clientes, cobranças e pagamentos. O painel resume cobranças pagas, a vencer e em atraso. Em produção, a aplicação web e a API são servidas pelo mesmo serviço.
-
-### Executar com pnpm
-
-Use Node.js 24 (fixado em `.nvmrc`) e pnpm 10.34.6 (fixado em `package.json`). Execute `nvm use` se você usa nvm e depois `corepack enable` para ativar o gerenciador de pacotes fixado. Na raiz do repositório:
-
-```sh
-pnpm install --frozen-lockfile
-pnpm build
-pnpm start
-```
-
-Acesse <http://localhost:5000>. Sem `DATABASE_URL`, a API usa PGlite e mantém os dados e o segredo JWT gerado no diretório `DATA_DIR` (por padrão, `./data`). Para iniciar a API e a aplicação web juntas durante o desenvolvimento, execute `pnpm dev`. Esse comando compila os pacotes compartilhados antes de iniciar os dois servidores; após alterar esses pacotes, execute `pnpm build:shared` para atualizar os arquivos gerados. Para desenvolver separadamente, execute `pnpm --filter @pagmanager/api dev` e `pnpm --filter @pagmanager/web dev` em terminais diferentes. O Vite usa a porta 5173 e encaminha as chamadas `/api` para a API na porta 5000.
-
-Execute `pnpm lint`, `pnpm typecheck` e `pnpm test` na raiz para verificar o workspace. `typecheck` usa `tsc -b` e as referências entre projetos para compilar os contratos e o banco antes da API e da aplicação web. As opções strict ficam em `tsconfig.base.json`; os pacotes Node usam resolução NodeNext e o frontend usa Bundler. As declarações da API ficam em `apps/api/dist-types`, separadas do bundle de execução. `test` compila os pacotes compartilhados e executa os quatro projetos de `vitest.workspace.ts` pela configuração Vitest da raiz, com grupos separados para banco e API. `pnpm test:e2e` compila a aplicação e executa os testes Playwright separadamente. Os comandos de banco são `pnpm db:generate`, `pnpm db:migrate` e `pnpm db:seed`.
-
-`pnpm install` instala o Lefthook em checkouts Git com dependências de desenvolvimento. Antes de cada commit, os hooks verificam os arquivos staged com o Biome local e executam `tsc -b`. Use `pnpm hooks:install` para reinstalar os hooks. Builds de contêiner e arquivos de código sem Git pulam a instalação; `LEFTHOOK=0` desativa a instalação automática quando necessário.
-
-### Executar com Docker Compose
-
-Copie `.env.example` para `.env`, troque as senhas de exemplo e inicie a aplicação com PostgreSQL:
-
-```powershell
-Copy-Item .env.example .env
-docker compose up --build -d
-docker compose logs -f app
-```
-
-Acesse <http://localhost:8080> ou a porta definida em `APP_PORT`. O Compose mantém o banco e os dados da aplicação em volumes nomeados. Para iniciar somente o PostgreSQL durante o desenvolvimento, use `docker compose -f compose.dev.yaml up -d postgres` e configure `DATABASE_URL` antes de iniciar a API.
-
-### API e configuração
-
-A documentação interativa da API fica em `/docs`; o documento OpenAPI fica em `/openapi.json`. A tabela de variáveis na seção [Configuration](#configuration) descreve `NODE_ENV`, `PORT`, `DATABASE_URL`, `DATA_DIR`, `JWT_SECRET`, `CORS_ORIGIN`, `WEB_DIST_DIR` e `VITE_API_URL`. O Compose também aceita `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `APP_PORT` e `PAGMANAGER_IMAGE`. Não publique o arquivo `.env` nem use os segredos de exemplo em produção.
-
-### Referências da modernização
-
-A tag [`legacy-v1`](https://github.com/mikedpsm/PagManager/tree/legacy-v1) preserva o backend original v1 no commit `a401d3f`, anterior ao primeiro merge de modernização. A branch [`modernize`](https://github.com/mikedpsm/PagManager/tree/modernize) foi criada a partir de `main` no commit `ad55b96` ao concluir a [tarefa T0.1 (#11)](https://github.com/mikedpsm/PagManager/issues/11). Os comandos da seção [Modernization references](#modernization-references) permitem consultar os metadados originais em um checkout local.
-
-### Autores
-
-- **Maicon Douglas Paiva da Silva** — [LinkedIn](https://www.linkedin.com/in/mikedpsm/)
-- **Jonatas Ximenez** — [LinkedIn](https://www.linkedin.com/in/devindio/)
+PagManager is licensed under the ISC license.
