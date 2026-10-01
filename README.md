@@ -46,7 +46,13 @@ pnpm start
 
 Open <http://localhost:5000>. Without `DATABASE_URL`, the API uses PGlite and keeps its data and generated JWT secret under `DATA_DIR` (default `./data`).
 
-For separate development servers, run the API and web app in two terminals:
+To start the API and web development servers together:
+
+```sh
+pnpm dev
+```
+
+This builds the shared contracts and database packages before starting both servers. After changing either shared package, run `pnpm build:shared` to refresh its generated files. To start the servers individually, use two terminals:
 
 ```sh
 pnpm --filter @pagmanager/api dev
@@ -54,6 +60,17 @@ pnpm --filter @pagmanager/web dev
 ```
 
 Vite serves the web app at <http://localhost:5173> and forwards `/api` requests to the API on port 5000. The API reference is at <http://localhost:5000/docs>; its OpenAPI document is at <http://localhost:5000/openapi.json>.
+
+Run workspace checks from the repository root:
+
+```sh
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:e2e
+```
+
+`typecheck` and `test` build the shared packages first so they also work before a full application build. `test` runs each package's unit and integration tests in sequence; `test:e2e` builds the application and runs Playwright separately. Database commands are available as `pnpm db:generate`, `pnpm db:migrate`, and `pnpm db:seed`.
 
 ## Run with Docker Compose
 
@@ -124,7 +141,9 @@ pnpm build
 pnpm start
 ```
 
-Acesse <http://localhost:5000>. Sem `DATABASE_URL`, a API usa PGlite e mantém os dados e o segredo JWT gerado no diretório `DATA_DIR` (por padrão, `./data`). Para desenvolver separadamente, execute `pnpm --filter @pagmanager/api dev` e `pnpm --filter @pagmanager/web dev` em terminais diferentes. O Vite usa a porta 5173 e encaminha as chamadas `/api` para a API na porta 5000.
+Acesse <http://localhost:5000>. Sem `DATABASE_URL`, a API usa PGlite e mantém os dados e o segredo JWT gerado no diretório `DATA_DIR` (por padrão, `./data`). Para iniciar a API e a aplicação web juntas durante o desenvolvimento, execute `pnpm dev`. Esse comando compila os pacotes compartilhados antes de iniciar os dois servidores; após alterar esses pacotes, execute `pnpm build:shared` para atualizar os arquivos gerados. Para desenvolver separadamente, execute `pnpm --filter @pagmanager/api dev` e `pnpm --filter @pagmanager/web dev` em terminais diferentes. O Vite usa a porta 5173 e encaminha as chamadas `/api` para a API na porta 5000.
+
+Execute `pnpm lint`, `pnpm typecheck` e `pnpm test` na raiz para verificar o workspace. Os dois últimos compilam os pacotes compartilhados antes das verificações. `pnpm test:e2e` compila a aplicação e executa os testes Playwright separadamente. Os comandos de banco são `pnpm db:generate`, `pnpm db:migrate` e `pnpm db:seed`.
 
 ### Executar com Docker Compose
 

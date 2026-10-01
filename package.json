@@ -28,11 +28,14 @@
   "main": "index.js",
   "scripts": {
     "start": "node apps/api/dist/server.mjs",
-    "dev": "pnpm --filter @pagmanager/api dev",
+    "build:shared": "pnpm --filter @pagmanager/contracts build && pnpm --filter @pagmanager/db build",
+    "dev": "pnpm build:shared && pnpm --parallel --filter @pagmanager/api --filter @pagmanager/web dev",
     "build": "pnpm --filter @pagmanager/contracts build && pnpm --filter @pagmanager/db build && pnpm --filter @pagmanager/api build && pnpm --filter @pagmanager/web build",
     "test:e2e": "node e2e/run.mjs",
     "lint": "npx @biomejs/biome check .",
     "lint:fix": "npx @biomejs/biome check --write .",
+    "typecheck": "pnpm build:shared && pnpm -r typecheck",
+    "test": "pnpm build:shared && pnpm --workspace-concurrency=1 -r test",
     "db:migrate": "pnpm --filter @pagmanager/db migrate",
     "db:seed": "pnpm --filter @pagmanager/db seed",
     "db:generate": "pnpm --filter @pagmanager/db generate"
